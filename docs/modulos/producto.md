@@ -13,7 +13,7 @@ Responsabilidad: CRUD de productos e inventario base.
 | `margen_ganancia` | `Decimal` | porcentaje, ej. `Decimal("30")` = 30% |
 | `stock_actual` | `int` | nunca negativo |
 | `stock_minimo` | `int` | nunca negativo |
-| `unidad_medida` | `str` | "unidad", "kg", "litro", etc. |
+| `unidad_medida` | `str` | "unidad", "kg", "litro", etc. — no vacío, máx 20 caracteres |
 | `activo` | `bool` | default `True` |
 
 Todas las validaciones anteriores ocurren en `__init__`/construcción → `ValorInvalidoError` si se violan.

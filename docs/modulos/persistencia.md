@@ -7,11 +7,10 @@ Responsabilidad: único punto de contacto con disco. `core/` no sabe que existe 
 | Firma | Retorna |
 |---|---|
 | `__init__(filepath: Path)` | — |
-| `leer_todos() -> list[dict]` | registros |
-| `guardar_todos(registros: list[dict]) -> None` | — |
-| `agregar(registro: dict) -> None` | — |
-| `actualizar(id: str, cambios: dict) -> None` | — |
-| `eliminar(id: str) -> None` | — |
+| `guardar(registro: dict) -> None` | — |
+| `obtener(id: str) -> dict \| None` | registro o `None` |
+| `listar() -> list[dict]` | registros |
+| `actualizar(registro: dict) -> None` | — |
 
 ## Repositorios (`ProductoRepository`, `VentaRepository`, `GastoRepository`, `MovimientoStockRepository`)
 

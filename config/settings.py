@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from core.moneda import Moneda
+from utils.excepciones import ValorInvalidoError
 
 
 class Settings:
@@ -38,7 +39,7 @@ class Settings:
 
     def _validar_nombre(self, nombre: str) -> None:
         if not isinstance(nombre, str) or not nombre.strip():
-            raise ValueError("El nombre del negocio no puede estar vacío.")
+            raise ValorInvalidoError("El nombre del negocio no puede estar vacío.")
 
 
 settings = Settings()

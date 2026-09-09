@@ -8,7 +8,7 @@ Responsabilidad: motor de cálculo costo → precio de venta. Implementa la prom
 |---|---|---|
 | `precio_venta(costo: Decimal, margen_pct: Decimal) -> Decimal` | precio de venta | fórmula: `costo * (1 + margen_pct / 100)`, redondeo `ROUND_HALF_UP` a 2 decimales |
 | `precio_mayorista(costo: Decimal, margen_mayorista_pct: Decimal) -> Decimal` | precio mayorista | misma fórmula, margen distinto |
-| `margen_real(costo: Decimal, precio_venta: Decimal) -> Decimal` | % real dado un precio manual | — |
+| `margen_real(costo: Decimal, precio_venta: Decimal) -> Decimal` | % real dado un precio manual | `ValorInvalidoError` si `costo == 0` |
 
 ## Reglas
 

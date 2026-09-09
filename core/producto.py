@@ -31,7 +31,7 @@ class Producto:
         self._validar_decimal(self.margen_ganancia, "margen_ganancia")
         self._validar_entero_no_negativo(self.stock_actual, "stock_actual")
         self._validar_entero_no_negativo(self.stock_minimo, "stock_minimo")
-        self._validar_nombre(self.unidad_medida)
+        self._validar_unidad_medida(self.unidad_medida)
 
     def _validar_id(self, valor: str) -> None:
         if not isinstance(valor, str) or not valor:
@@ -61,6 +61,12 @@ class Producto:
             raise ValorInvalidoError(f"{campo} debe ser un entero.")
         if valor < 0:
             raise ValorInvalidoError(f"{campo} no puede ser negativo.")
+
+    def _validar_unidad_medida(self, valor: str) -> None:
+        if not isinstance(valor, str) or not valor.strip():
+            raise ValorInvalidoError("La unidad de medida no puede estar vacía.")
+        if len(valor) > 20:
+            raise ValorInvalidoError("La unidad de medida no puede superar los 20 caracteres.")
 
 
 class RepositorioProductos(Protocol):

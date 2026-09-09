@@ -15,7 +15,20 @@ class JsonStore:
         self._filepath = filepath
         self._filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    def leer_todos(self) -> list[dict]:
+    def guardar(self, registro: dict) -> None:
+        """Añade un registro al final del archivo, de forma atómica."""
+        registros = self.listar()
+        registros.append(registro)
+        self._escribir_atomico(registros)
+
+    def obtener(self, id: str) -> dict | None:
+        """Busca un registro por id; devuelve None si no existe."""
+        for r in self.listar():
+            if r.get("id") == id:
+                return r
+        return None
+
+    def listar(self) -> list[dict]:
         """Devuelve todos los registros; lista vacía si el archivo no existe."""
         if not self._filepath.exists():
             return []
@@ -28,33 +41,17 @@ class JsonStore:
             return []
         return json.loads(contenido)
 
-    def guardar_todos(self, registros: list[dict]) -> None:
-        """Sobrescribe el archivo con todos los registros, de forma atómica."""
-        self._escribir_atomico(registros)
-
-    def agregar(self, registro: dict) -> None:
-        """Añade un registro al final del archivo."""
-        registros = self.leer_todos()
-        registros.append(registro)
-        self._escribir_atomico(registros)
-
-    def actualizar(self, id: str, cambios: dict) -> None:
-        """Actualiza el registro con el id dado aplicando los cambios."""
-        registros = self.leer_todos()
-        for r in registros:
-            if r.get("id") == id:
-                r.update(cambios)
+    def actualizar(self, registro: dict) -> None:
+        """Reemplaza el registro cuyo id coincide con el del registro dado."""
+        registros = self.listar()
+        for i, r in enumerate(registros):
+            if r.get("id") == registro.get("id"):
+                registros[i] = registro
                 self._escribir_atomico(registros)
                 return
-        raise PersistenciaError(f"No existe un registro con id {id}.")
-
-    def eliminar(self, id: str) -> None:
-        """Elimina el registro con el id dado."""
-        registros = self.leer_todos()
-        nuevos = [r for r in registros if r.get("id") != id]
-        if len(nuevos) == len(registros):
-            raise PersistenciaError(f"No existe un registro con id {id}.")
-        self._escribir_atomico(nuevos)
+        raise PersistenciaError(
+            f"No existe un registro con id {registro.get('id')}."
+        )
 
     def _escribir_atomico(self, registros: list[dict]) -> None:
         """Escribe en un archivo temporal y lo renombra al destino."""

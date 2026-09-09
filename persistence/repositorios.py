@@ -20,22 +20,20 @@ class RepositorioProductosJSON:
 
     def guardar(self, producto: Producto) -> None:
         """Persiste un producto como diccionario."""
-        self._store.agregar(self._serializar(producto))
+        self._store.guardar(self._serializar(producto))
 
     def obtener(self, id: str) -> Producto | None:
         """Busca un producto por id; devuelve None si no existe."""
-        for r in self._store.leer_todos():
-            if r["id"] == id:
-                return self._deserializar(r)
-        return None
+        registro = self._store.obtener(id)
+        return self._deserializar(registro) if registro else None
 
     def listar(self) -> list[Producto]:
         """Devuelve todos los productos."""
-        return [self._deserializar(r) for r in self._store.leer_todos()]
+        return [self._deserializar(r) for r in self._store.listar()]
 
     def actualizar(self, producto: Producto) -> None:
         """Reemplaza el producto con el mismo id."""
-        self._store.actualizar(producto.id, self._serializar(producto))
+        self._store.actualizar(self._serializar(producto))
 
     def _serializar(self, p: Producto) -> dict:
         return {
@@ -72,7 +70,7 @@ class RepositorioMovimientosJSON:
 
     def guardar(self, movimiento: MovimientoStock) -> None:
         """Persiste un movimiento como diccionario."""
-        self._store.agregar(self._serializar(movimiento))
+        self._store.guardar(self._serializar(movimiento))
 
     def _serializar(self, m: MovimientoStock) -> dict:
         return {
@@ -101,7 +99,7 @@ class RepositorioVentasJSON:
 
     def guardar(self, venta: Venta) -> None:
         """Persiste una venta como diccionario."""
-        self._store.agregar(self._serializar(venta))
+        self._store.guardar(self._serializar(venta))
 
     def _serializar(self, v: Venta) -> dict:
         return {
@@ -147,11 +145,11 @@ class RepositorioGastosJSON:
 
     def guardar(self, gasto: Gasto) -> None:
         """Persiste un gasto como diccionario."""
-        self._store.agregar(self._serializar(gasto))
+        self._store.guardar(self._serializar(gasto))
 
     def listar(self) -> list[Gasto]:
         """Devuelve todos los gastos."""
-        return [self._deserializar(r) for r in self._store.leer_todos()]
+        return [self._deserializar(r) for r in self._store.listar()]
 
     def _serializar(self, g: Gasto) -> dict:
         return {
