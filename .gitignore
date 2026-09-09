@@ -1,0 +1,22 @@
+# Entorno virtual
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Datos reales del negocio — nunca al repo
+data/*.json
+!data/.gitkeep
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# OpenCode / sesiones locales
+.opencode/
+.obsidian/
+activate/

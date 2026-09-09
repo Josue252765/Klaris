@@ -17,6 +17,17 @@ Responsabilidad: único punto de contacto con disco. `core/` no sabe que existe 
 
 Cada uno envuelve un `JsonStore` y hace la conversión objeto ↔ dict. Aísla a `core/` del formato de almacenamiento — esto es lo que permite migrar a SQLite en v2 sin tocar `core/`.
 
+## Archivos de datos (nombres exactos, no inventar otros)
+
+| Repositorio | Archivo |
+|---|---|
+| `ProductoRepository` | `data/productos.json` |
+| `VentaRepository` | `data/ventas.json` |
+| `GastoRepository` | `data/gastos.json` |
+| `MovimientoStockRepository` | `data/movimientos_stock.json` |
+
+Cada archivo contiene una lista JSON de objetos (`[]` si está vacío). Si el archivo no existe al leer, `JsonStore` lo crea vacío — no lanza error.
+
 ## Reglas técnicas obligatorias
 
 - Escritura siempre atómica: escribir a archivo temporal y `rename` (evita corrupción si el proceso se interrumpe a media escritura).
