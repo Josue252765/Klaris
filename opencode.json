@@ -1,0 +1,27 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "ask",
+    "read": "allow",
+    "edit": {
+      "*": "ask",
+      "AGENTS.md": "ask",
+      "docs/KLARIS_BACKEND_SPEC.md": "deny",
+      "data/*.json": "deny"
+    },
+    "bash": {
+      "*": "ask",
+      "git status": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git add*": "allow",
+      "git commit*": "allow",
+      "pytest*": "allow",
+      "ruff*": "allow",
+      "rm *": "deny",
+      "sudo *": "deny",
+      "git push*": "ask",
+      "git reset --hard*": "deny"
+    }
+  }
+}
