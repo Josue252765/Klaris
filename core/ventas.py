@@ -132,10 +132,11 @@ class GestorVentas:
         moneda_pago: Moneda = Moneda.USD,
         monto_recibido_bs: Decimal | None = None,
     ) -> Venta:
-        """Valida, descuenta stock, persiste y devuelve la venta cerrada."""
+        """Valida pago y stock, descuenta stock, persiste y devuelve la venta cerrada."""
         self._validar_carrito_no_vacio(carrito)
         self._validar_metodo_pago(metodo_pago)
         self._validar_stock_de_todo(carrito)
+        self._validar_pago_bs(carrito.total(), moneda_pago, monto_recibido_bs)
         self._descontar_stock(carrito)
         venta = self._construir_venta(
             carrito, moneda, metodo_pago, moneda_pago, monto_recibido_bs
@@ -167,6 +168,20 @@ class GestorVentas:
     def _validar_metodo_pago(self, metodo_pago: str) -> None:
         if metodo_pago not in METODOS_PAGO_VALIDOS:
             raise ValorInvalidoError(f"Método de pago inválido: {metodo_pago}.")
+
+    def _validar_pago_bs(
+        self, total_usd: Decimal, moneda_pago: Moneda,
+        monto_recibido_bs: Decimal | None,
+    ) -> None:
+        """Verifica que el pago en BS sea suficiente antes de descontar stock."""
+        if moneda_pago != Moneda.BS:
+            return
+        tasa = self._obtener_tasa_diaria()
+        total_bs = tasa.convertir(total_usd, Moneda.USD, Moneda.BS, "diaria")
+        if monto_recibido_bs is not None and monto_recibido_bs < total_bs:
+            raise ValorInvalidoError(
+                f"Pago insuficiente: {monto_recibido_bs} < {total_bs}."
+            )
 
     def _validar_stock_de_todo(self, carrito: Carrito) -> None:
         for item in carrito.items():
