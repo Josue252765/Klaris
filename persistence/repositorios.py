@@ -101,6 +101,10 @@ class RepositorioVentasJSON:
         """Persiste una venta como diccionario."""
         self._store.guardar(self._serializar(venta))
 
+    def listar(self) -> list[Venta]:
+        """Devuelve todas las ventas."""
+        return [self._deserializar(r) for r in self._store.listar()]
+
     def _serializar(self, v: Venta) -> dict:
         return {
             "id": v.id,

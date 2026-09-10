@@ -1,7 +1,7 @@
 """Carrito temporal, cierre de venta y descuento de stock asociado."""
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Protocol
 from uuid import uuid4
@@ -106,6 +106,8 @@ class RepositorioVentas(Protocol):
 
     def guardar(self, venta: Venta) -> None: ...
 
+    def listar(self) -> list[Venta]: ...
+
 
 class GestorVentas:
     """Cierra ventas validando stock atómicamente antes de descontar nada."""
@@ -140,6 +142,23 @@ class GestorVentas:
         )
         self._ventas.guardar(venta)
         return venta
+
+    def listar(
+        self, desde: date | None = None, hasta: date | None = None
+    ) -> list[Venta]:
+        """Lista ventas filtrando por rango de fechas."""
+        ventas = self._ventas.listar()
+        return [v for v in ventas if self._pasa_filtro_fecha(v, desde, hasta)]
+
+    def _pasa_filtro_fecha(
+        self, venta: Venta, desde: date | None, hasta: date | None
+    ) -> bool:
+        fecha = venta.fecha.date()
+        if desde is not None and fecha < desde:
+            return False
+        if hasta is not None and fecha > hasta:
+            return False
+        return True
 
     def _validar_carrito_no_vacio(self, carrito: Carrito) -> None:
         if carrito.esta_vacio():

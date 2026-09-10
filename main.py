@@ -1,15 +1,29 @@
-"""Script de prueba de humo: verifica que el motor conecta de extremo a extremo."""
+"""Punto de entrada de Klaris. Menú principal y dispatch a acciones de la CLI."""
 
-import json
 from pathlib import Path
 
+from cli.acciones import (
+    accion_actualizar_tasa,
+    accion_ajustar_stock,
+    accion_buscar_producto,
+    accion_crear_producto,
+    accion_editar_producto,
+    accion_entrada_inventario,
+    accion_listar_gastos,
+    accion_listar_productos,
+    accion_registrar_gasto,
+    accion_reporte_dia,
+    accion_salida_inventario,
+    accion_ver_stock_bajo,
+    accion_ver_tasa,
+    accion_vender,
+)
 from config.settings import Settings
-from core.gastos import CategoriaGasto, GestorGastos
+from core.gastos import GestorGastos
 from core.inventario import GestorInventario
-from core.moneda import Moneda
 from core.producto import GestorProductos
-from core.ventas import Carrito, GestorVentas
-from decimal import Decimal
+from core.tasas import GestorTasas
+from core.ventas import GestorVentas
 from persistence.repositorios import (
     RepositorioGastosJSON,
     RepositorioMovimientosJSON,
@@ -18,64 +32,103 @@ from persistence.repositorios import (
     RepositorioVentasJSON,
 )
 
+_MENU = """\
+=== Klaris ===
+1. Productos
+2. Inventario
+3. Vender
+4. Gastos
+5. Tasas de cambio
+6. Reporte del día
+7. Salir
+"""
+
 
 def main() -> None:
+    """Instancia gestores y ejecuta el loop del menú principal."""
     config = Settings(directorio_datos=Path("data"))
-
     repo_productos = RepositorioProductosJSON(config.ruta_productos())
     repo_movimientos = RepositorioMovimientosJSON(config.ruta_movimientos())
     repo_ventas = RepositorioVentasJSON(config.ruta_ventas())
     repo_gastos = RepositorioGastosJSON(config.ruta_gastos())
     repo_tasas = RepositorioTasaJSON(config.ruta_tasas())
 
-    gestor_productos = GestorProductos(repo_productos)
+    gestor_tasas = GestorTasas(repo_tasas)
+    gestor_productos = GestorProductos(repo_productos, repo_tasas)
     gestor_inventario = GestorInventario(repo_productos, repo_movimientos)
-    gestor_ventas = GestorVentas(gestor_inventario, repo_productos, repo_ventas)
-    gestor_gastos = GestorGastos(repo_gastos)
-
-    print("=== Prueba de humo de Klaris ===")
-
-    producto = gestor_productos.crear(
-        nombre="Harina de maíz",
-        categoria="Alimentos",
-        costo_unitario=Decimal("2.50"),
-        margen_ganancia=Decimal("30"),
-        stock_inicial=0,
-        stock_minimo=2,
-        unidad_medida="kg",
+    gestor_ventas = GestorVentas(
+        gestor_inventario, repo_productos, repo_ventas, repo_tasas
     )
-    print(f"OK: producto creado (id={producto.id})")
+    gestor_gastos = GestorGastos(repo_gastos, repo_tasas)
 
-    movimiento = gestor_inventario.registrar_entrada(
-        producto.id, 10, "compra inicial"
-    )
-    print(f"OK: entrada registrada (+{movimiento.cantidad} unidades)")
+    while True:
+        print(_MENU)
+        opcion = input("Opción: ").strip()
+        if opcion == "1":
+            _menu_productos(gestor_productos)
+        elif opcion == "2":
+            _menu_inventario(gestor_inventario)
+        elif opcion == "3":
+            accion_vender(gestor_ventas, gestor_productos)
+        elif opcion == "4":
+            _menu_gastos(gestor_gastos)
+        elif opcion == "5":
+            _menu_tasas(gestor_tasas)
+        elif opcion == "6":
+            accion_reporte_dia(gestor_ventas, gestor_gastos)
+        elif opcion == "7":
+            print("Hasta luego.")
+            break
+        else:
+            print("Opción inválida.")
 
-    producto_actualizado = repo_productos.obtener(producto.id)
-    print(f"OK: stock tras entrada = {producto_actualizado.stock_actual}")
 
-    carrito = Carrito()
-    carrito.agregar_item(producto_actualizado, 3)
-    venta = gestor_ventas.cerrar_venta(carrito, Moneda.USD, "efectivo_usd")
-    print(f"OK: venta registrada (id={venta.id}, total={venta.total})")
+def _menu_productos(gestor_productos: GestorProductos) -> None:
+    """Submenú de productos: listar, crear, buscar, editar."""
+    print("  a) Listar  b) Crear  c) Buscar  d) Editar")
+    sub = input("  Opción: ").strip().lower()
+    if sub == "a":
+        accion_listar_productos(gestor_productos)
+    elif sub == "b":
+        accion_crear_producto(gestor_productos)
+    elif sub == "c":
+        accion_buscar_producto(gestor_productos)
+    elif sub == "d":
+        accion_editar_producto(gestor_productos)
 
-    producto_final = repo_productos.obtener(producto.id)
-    print(f"OK: stock tras venta = {producto_final.stock_actual} (debe ser 7)")
 
-    gasto = gestor_gastos.registrar(
-        CategoriaGasto.MERCANCIA,
-        "Compra de harina",
-        Decimal("25.00"),
-        Moneda.USD,
-    )
-    print(f"OK: gasto registrado (id={gasto.id}, monto={gasto.monto})")
+def _menu_inventario(gestor_inventario: GestorInventario) -> None:
+    """Submenú de inventario: entrada, salida, ajustar, stock bajo."""
+    print("  a) Entrada  b) Salida  c) Ajustar  d) Stock bajo")
+    sub = input("  Opción: ").strip().lower()
+    if sub == "a":
+        accion_entrada_inventario(gestor_inventario)
+    elif sub == "b":
+        accion_salida_inventario(gestor_inventario)
+    elif sub == "c":
+        accion_ajustar_stock(gestor_inventario)
+    elif sub == "d":
+        accion_ver_stock_bajo(gestor_inventario)
 
-    with open(config.ruta_ventas(), "r", encoding="utf-8") as f:
-        contenido = json.load(f)
-    print(f"OK: ventas.json tiene {len(contenido)} registro(s):")
-    print(json.dumps(contenido, ensure_ascii=False, indent=2))
 
-    print("=== Fin ===")
+def _menu_gastos(gestor_gastos: GestorGastos) -> None:
+    """Submenú de gastos: registrar, listar."""
+    print("  a) Registrar  b) Listar")
+    sub = input("  Opción: ").strip().lower()
+    if sub == "a":
+        accion_registrar_gasto(gestor_gastos)
+    elif sub == "b":
+        accion_listar_gastos(gestor_gastos)
+
+
+def _menu_tasas(gestor_tasas: GestorTasas) -> None:
+    """Submenú de tasas: actualizar, ver."""
+    print("  a) Actualizar  b) Ver")
+    sub = input("  Opción: ").strip().lower()
+    if sub == "a":
+        accion_actualizar_tasa(gestor_tasas)
+    elif sub == "b":
+        accion_ver_tasa(gestor_tasas)
 
 
 if __name__ == "__main__":
