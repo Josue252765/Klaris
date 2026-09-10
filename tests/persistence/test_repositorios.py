@@ -6,12 +6,14 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from core.devoluciones import AnulacionVenta
 from core.gastos import CategoriaGasto, Gasto
 from core.inventario import MovimientoStock
 from core.moneda import Moneda, TasaCambio
 from core.producto import Producto
 from core.ventas import ItemCarrito, Venta
 from persistence.repositorios import (
+    RepositorioAnulacionesJSON,
     RepositorioGastosJSON,
     RepositorioMovimientosJSON,
     RepositorioProductosJSON,
@@ -100,7 +102,53 @@ def test_venta_roundtrip_decimal_y_moneda(tmp_path) -> None:
         fecha=datetime(2026, 9, 9, 15, 30, 0),
     )
     repo.guardar(venta)
-    assert len(repo._store.listar()) == 1
+    recuperados = repo.listar()
+    assert len(recuperados) == 1
+    assert recuperados[0].total == Decimal("9.75")
+    assert recuperados[0].anulada is False
+
+
+def test_venta_roundtrip_flag_anulada(tmp_path) -> None:
+    from dataclasses import replace
+
+    repo = RepositorioVentasJSON(tmp_path / "ventas.json")
+    items = [
+        ItemCarrito(
+            producto_id="p1",
+            cantidad=1,
+            precio_unitario=Decimal("5.00"),
+        )
+    ]
+    venta = Venta(
+        id=str(uuid4()),
+        items=items,
+        total=Decimal("5.00"),
+        moneda=Moneda.USD,
+        metodo_pago="efectivo_usd",
+        fecha=datetime(2026, 9, 10, 12, 0, 0),
+        anulada=False,
+    )
+    repo.guardar(venta)
+    repo.actualizar(replace(venta, anulada=True))
+    recuperada = repo.listar()[0]
+    assert recuperada.anulada is True
+
+
+def test_anulacion_roundtrip(tmp_path) -> None:
+    repo = RepositorioAnulacionesJSON(tmp_path / "anulaciones.json")
+    anulacion = AnulacionVenta(
+        id=str(uuid4()),
+        venta_id=str(uuid4()),
+        motivo="cliente devolvió",
+        fecha=datetime(2026, 9, 10, 16, 0, 0),
+        monto_devuelto_usd=Decimal("9.75"),
+    )
+    repo.guardar(anulacion)
+    recuperados = repo.listar()
+    assert len(recuperados) == 1
+    assert recuperados[0].motivo == "cliente devolvió"
+    assert recuperados[0].monto_devuelto_usd == Decimal("9.75")
+    assert isinstance(recuperados[0].monto_devuelto_usd, Decimal)
 
 
 def test_gasto_roundtrip_categoria_y_decimal(tmp_path) -> None:

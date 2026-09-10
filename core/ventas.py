@@ -1,6 +1,6 @@
 """Carrito temporal, cierre de venta y descuento de stock asociado."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Protocol
@@ -99,6 +99,7 @@ class Venta:
     tasa_usada: Decimal | None = None
     monto_recibido_bs: Decimal | None = None
     vuelto_bs: Decimal | None = None
+    anulada: bool = False
 
 
 class RepositorioVentas(Protocol):
@@ -107,6 +108,8 @@ class RepositorioVentas(Protocol):
     def guardar(self, venta: Venta) -> None: ...
 
     def listar(self) -> list[Venta]: ...
+
+    def actualizar(self, venta: Venta) -> None: ...
 
 
 class GestorVentas:
@@ -150,6 +153,24 @@ class GestorVentas:
         """Lista ventas filtrando por rango de fechas."""
         ventas = self._ventas.listar()
         return [v for v in ventas if self._pasa_filtro_fecha(v, desde, hasta)]
+
+    def obtener(self, venta_id: str) -> Venta | None:
+        """Devuelve la venta con ese id o None si no existe."""
+        for venta in self._ventas.listar():
+            if venta.id == venta_id:
+                return venta
+        return None
+
+    def marcar_anulada(self, venta_id: str) -> Venta:
+        """Marca la venta como anulada y la persiste; lanza si no existe o ya está anulada."""
+        venta = self.obtener(venta_id)
+        if venta is None:
+            raise ValorInvalidoError(f"No existe una venta con id {venta_id}.")
+        if venta.anulada:
+            raise ValorInvalidoError("La venta ya está anulada.")
+        actualizada = replace(venta, anulada=True)
+        self._ventas.actualizar(actualizada)
+        return actualizada
 
     def _pasa_filtro_fecha(
         self, venta: Venta, desde: date | None, hasta: date | None

@@ -68,7 +68,7 @@ class GeneradorReportes:
     ) -> CierreCaja:
         """Genera el cierre del período; si fecha_hasta es None usa fecha_desde."""
         hasta = fecha_hasta if fecha_hasta is not None else fecha_desde
-        ventas = self._ventas.listar(desde=fecha_desde, hasta=hasta)
+        ventas = self._ventas_activas(fecha_desde, hasta)
         tasa_diaria = self._tasa_diaria()
 
         total_ventas_usd = self._sumar_ventas_usd(ventas)
@@ -96,7 +96,7 @@ class GeneradorReportes:
         hasta: date | None = None,
     ) -> list[ProductoRanking]:
         """Devuelve los productos más vendidos en cantidad, limitado a 'limite'."""
-        ventas = self._ventas.listar(desde=desde, hasta=hasta)
+        ventas = self._ventas_activas(desde, hasta)
         acumulado: dict[str, list] = {}
         for venta in ventas:
             for item in venta.items:
@@ -115,6 +115,11 @@ class GeneradorReportes:
         ]
         ranking.sort(key=lambda r: r.cantidad_total, reverse=True)
         return ranking[:limite]
+
+    def _ventas_activas(
+        self, desde: date | None, hasta: date | None
+    ) -> list[Venta]:
+        return [v for v in self._ventas.listar(desde=desde, hasta=hasta) if not v.anulada]
 
     def _sumar_ventas_usd(self, ventas: list[Venta]) -> Decimal:
         return sum((v.total for v in ventas), Decimal("0"))

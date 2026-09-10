@@ -28,7 +28,7 @@ def test_cli_sesion_completa(capsys, monkeypatch, tmp_path) -> None:
         "Aceite", "Alimentos", "USD", "4.00", "30", "10", "2", "litro",
         "2", "a",
         marcador, "5", "compra",
-        "3",
+        "3", "a",
         marcador, "2", "listo", "efectivo_usd", "USD",
         "6", "",
         "8",

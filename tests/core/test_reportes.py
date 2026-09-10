@@ -53,6 +53,12 @@ class RepoVentasMemoria:
     def listar(self) -> list[Venta]:
         return list(self._items)
 
+    def actualizar(self, v: Venta) -> None:
+        for i, actual in enumerate(self._items):
+            if actual.id == v.id:
+                self._items[i] = v
+                return
+
 
 class RepoGastosMemoria:
     def __init__(self) -> None:

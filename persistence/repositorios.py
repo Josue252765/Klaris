@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from core.devoluciones import AnulacionVenta
 from core.gastos import CategoriaGasto, Gasto
 from core.inventario import MovimientoStock
 from core.moneda import Moneda, TasaCambio
@@ -126,7 +127,12 @@ class RepositorioVentasJSON:
             "tasa_usada": str(v.tasa_usada) if v.tasa_usada is not None else None,
             "monto_recibido_bs": str(v.monto_recibido_bs) if v.monto_recibido_bs is not None else None,
             "vuelto_bs": str(v.vuelto_bs) if v.vuelto_bs is not None else None,
+            "anulada": v.anulada,
         }
+
+    def actualizar(self, venta: Venta) -> None:
+        """Reemplaza la venta con el mismo id."""
+        self._store.actualizar(self._serializar(venta))
 
     def _deserializar(self, r: dict) -> Venta:
         items = [
@@ -148,6 +154,7 @@ class RepositorioVentasJSON:
             tasa_usada=Decimal(r["tasa_usada"]) if r.get("tasa_usada") is not None else None,
             monto_recibido_bs=Decimal(r["monto_recibido_bs"]) if r.get("monto_recibido_bs") is not None else None,
             vuelto_bs=Decimal(r["vuelto_bs"]) if r.get("vuelto_bs") is not None else None,
+            anulada=bool(r.get("anulada", False)),
         )
 
 
@@ -231,4 +238,37 @@ class RepositorioTasaJSON:
             tasa_referencial_fecha=date.fromisoformat(r["tasa_referencial_fecha"]),
             tasa_diaria=Decimal(r["tasa_diaria"]),
             tasa_diaria_fecha=date.fromisoformat(r["tasa_diaria_fecha"]),
+        )
+
+
+class RepositorioAnulacionesJSON:
+    """Persistencia de AnulacionVenta en data/anulaciones.json."""
+
+    def __init__(self, filepath: Path | None = None) -> None:
+        self._store = JsonStore(filepath or Path("data/anulaciones.json"))
+
+    def guardar(self, anulacion: AnulacionVenta) -> None:
+        """Persiste una anulación como diccionario."""
+        self._store.guardar(self._serializar(anulacion))
+
+    def listar(self) -> list[AnulacionVenta]:
+        """Devuelve todas las anulaciones."""
+        return [self._deserializar(r) for r in self._store.listar()]
+
+    def _serializar(self, a: AnulacionVenta) -> dict:
+        return {
+            "id": a.id,
+            "venta_id": a.venta_id,
+            "motivo": a.motivo,
+            "fecha": a.fecha.isoformat(),
+            "monto_devuelto_usd": str(a.monto_devuelto_usd),
+        }
+
+    def _deserializar(self, r: dict) -> AnulacionVenta:
+        return AnulacionVenta(
+            id=r["id"],
+            venta_id=r["venta_id"],
+            motivo=r["motivo"],
+            fecha=datetime.fromisoformat(r["fecha"]),
+            monto_devuelto_usd=Decimal(r["monto_devuelto_usd"]),
         )

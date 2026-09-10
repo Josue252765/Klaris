@@ -37,6 +37,7 @@ Responsabilidad: carrito temporal, cierre de venta, actualización de stock asoc
 | `tasa_usada` | `Decimal \| None` | valor numérico de `tasa_diaria` aplicado; `None` si pago en USD |
 | `monto_recibido_bs` | `Decimal \| None` | monto entregado por el cliente en BS; `None` si pago en USD |
 | `vuelto_bs` | `Decimal \| None` | `monto_recibido_bs − total_bs`; `None` si pago en USD |
+| `anulada` | `bool` | `False` al cerrar; `True` tras `GestorDevoluciones.anular_venta` |
 
 ## Clase `GestorVentas`
 
@@ -55,9 +56,26 @@ Flujo obligatorio, en este orden exacto:
 
 ### `listar(desde=None, hasta=None) -> list[Venta]`
 
-Devuelve ventas filtrando por rango de fechas (ambos extremos inclusivos). Sin filtro devuelve todas.
+Devuelve ventas filtrando por rango de fechas (ambos extremos inclusivos). Sin filtro devuelve todas, incluidas las anuladas.
 
-## Flujo CLI (`cli/acciones.py → accion_vender`)
+### `obtener(venta_id: str) -> Venta | None`
+
+Busca por id exacto. `None` si no existe.
+
+### `marcar_anulada(venta_id: str) -> Venta`
+
+Persiste `anulada=True` vía `RepositorioVentas.actualizar`. Lanza `ValorInvalidoError` si la venta no existe o ya está anulada. No reingresa stock: eso lo hace `GestorDevoluciones.anular_venta`.
+
+## Flujo CLI (`cli/acciones.py` y `main.py`)
+
+Menú principal opción **3. Ventas**:
+
+| Subopción | Función | Pasos |
+|---|---|---|
+| a) Vender | `accion_vender` | armar carrito → método de pago → moneda → monto en BS si aplica → `cerrar_venta` → ticket |
+| b) Anular venta | `accion_anular_venta` | listar ventas no anuladas → pedir id (prefijo único) y motivo → `GestorDevoluciones.anular_venta` |
+
+`accion_vender`:
 
 1. Armar carrito interactivamente con `armar_carrito` (agrega productos por código/nombre hasta que el usuario indique fin).
 2. Pedir método de pago (`pedir_metodo_pago`): muestra las 4 opciones.
@@ -81,7 +99,8 @@ Esquema de cada registro:
   "total_bs": "str Decimal | null",
   "tasa_usada": "str Decimal | null",
   "monto_recibido_bs": "str Decimal | null",
-  "vuelto_bs": "str Decimal | null"
+  "vuelto_bs": "str Decimal | null",
+  "anulada": false
 }
 ```
 

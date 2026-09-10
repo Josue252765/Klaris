@@ -47,3 +47,8 @@
 - Contexto: hacía falta una forma corta y única de identificar/buscar productos sin depender del UUID ni del nombre libre (que admite mayúsculas, errores de tipeo y duplicados).
 - Decisión: `Producto.codigo` se autogenera en `GestorProductos.crear()` a partir de las primeras 3 letras de la categoría (mayúsculas, sin acentos ni espacios) + número secuencial zero-padded a 4 dígitos. El usuario nunca lo escribe.
 - Razón: evitar error humano al tipearlo y garantizar unicidad, y dejar preparado el terreno para un lector de código de barras futuro (PATRÓN corto y estable).
+
+### [2026-09-10] anular_venta vive en GestorDevoluciones
+- Contexto: la tarea permitía el método en `core/ventas.py` o `core/devoluciones.py`.
+- Decisión: `GestorDevoluciones.anular_venta` orquesta validación, reingreso de stock y persistencia de `AnulacionVenta`. `GestorVentas` solo expone `obtener` y `marcar_anulada`.
+- Razón: anular no es cerrar una venta; mezclarlo en `GestorVentas` acoplaría ventas a un repositorio de anulaciones. El flag `anulada` sí pertenece a `Venta` porque los reportes y el listado lo leen ahí.

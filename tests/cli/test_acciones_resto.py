@@ -5,12 +5,14 @@ from uuid import uuid4
 
 from cli.acciones import (
     accion_actualizar_tasa,
+    accion_anular_venta,
     accion_listar_gastos,
     accion_registrar_gasto,
     accion_reporte_dia,
     accion_ver_tasa,
     accion_vender,
 )
+from core.devoluciones import GestorDevoluciones
 from core.gastos import CategoriaGasto, Gasto, GestorGastos
 from core.inventario import GestorInventario
 from core.moneda import Moneda
@@ -18,6 +20,17 @@ from core.producto import GestorProductos
 from core.tasas import GestorTasas
 from core.ventas import GestorVentas
 from tests.cli.conftest import producto, tasa, RepoGastosMemoria, RepoProductosMemoria, RepoMovimientosMemoria, RepoTasaMemoria, RepoVentasMemoria
+
+
+class RepoAnulacionesMemoria:
+    def __init__(self):
+        self._items = []
+
+    def guardar(self, a) -> None:
+        self._items.append(a)
+
+    def listar(self) -> list:
+        return list(self._items)
 
 
 # --- Vender ---
@@ -49,6 +62,38 @@ def test_vender_carrito_vacio(capsys, monkeypatch) -> None:
     monkeypatch.setattr("builtins.input", lambda p="": "listo")
     accion_vender(gestor, gestor_prod)
     assert "Nada que vender" in capsys.readouterr().out
+
+
+def test_anular_venta_feliz(capsys, monkeypatch) -> None:
+    repo_prod = RepoProductosMemoria()
+    repo_mov = RepoMovimientosMemoria()
+    repo_ventas = RepoVentasMemoria()
+    p = producto(stock=10)
+    repo_prod.guardar(p)
+    inventario = GestorInventario(repo_prod, repo_mov)
+    gestor = GestorVentas(inventario, repo_prod, repo_ventas, RepoTasaMemoria())
+    gestor_prod = GestorProductos(repo_prod, RepoTasaMemoria())
+    inputs_venta = iter(["Harina", "2", "listo", "efectivo_usd", "USD"])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(inputs_venta))
+    accion_vender(gestor, gestor_prod)
+    venta = repo_ventas.listar()[0]
+    inputs_anul = iter([venta.id[:8], "error de cobro"])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(inputs_anul))
+    gestor_dev = GestorDevoluciones(gestor, inventario, RepoAnulacionesMemoria())
+    accion_anular_venta(gestor_dev, gestor)
+    out = capsys.readouterr().out
+    assert "OK: venta anulada" in out
+    assert repo_prod.obtener(p.id).stock_actual == 10
+
+
+def test_anular_venta_sin_ventas(capsys) -> None:
+    inventario = GestorInventario(RepoProductosMemoria(), RepoMovimientosMemoria())
+    gestor = GestorVentas(
+        inventario, RepoProductosMemoria(), RepoVentasMemoria(), RepoTasaMemoria()
+    )
+    gestor_dev = GestorDevoluciones(gestor, inventario, RepoAnulacionesMemoria())
+    accion_anular_venta(gestor_dev, gestor)
+    assert "No hay ventas para anular" in capsys.readouterr().out
 
 
 # --- Gastos ---

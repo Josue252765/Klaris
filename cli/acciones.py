@@ -3,12 +3,13 @@
 from datetime import date
 from decimal import Decimal
 
+from core.devoluciones import GestorDevoluciones
 from core.gastos import CategoriaGasto, GestorGastos
 from core.inventario import GestorInventario
 from core.moneda import Moneda
 from core.producto import GestorProductos
 from core.tasas import GestorTasas
-from core.ventas import GestorVentas
+from core.ventas import GestorVentas, Venta
 from cli.helpers import (
     armar_carrito,
     imprimir_ticket,
@@ -193,6 +194,43 @@ def accion_vender(
         imprimir_ticket(venta, gestor_productos)
     except (KlarisError, ValueError, ArithmeticError) as e:
         print(f"Error: {e}")
+
+
+def accion_anular_venta(
+    gestor_devoluciones: GestorDevoluciones, gestor_ventas: GestorVentas
+) -> None:
+    """Lista ventas activas, pide id y motivo, y anula la venta."""
+    try:
+        ventas = [v for v in gestor_ventas.listar() if not v.anulada]
+        if not ventas:
+            print("No hay ventas para anular.")
+            return
+        print("Ventas:")
+        for v in ventas:
+            print(
+                f"  [{v.id[:8]}] {formatear_moneda(v.total, Moneda.USD)} | "
+                f"{formatear_fecha(v.fecha)}"
+            )
+        texto = input("ID de venta: ").strip()
+        venta = _resolver_venta_por_id(ventas, texto)
+        motivo = input("Motivo: ").strip()
+        anulacion = gestor_devoluciones.anular_venta(venta.id, motivo)
+        print(f"OK: venta anulada (id={anulacion.venta_id[:8]})")
+    except (KlarisError, ValueError) as e:
+        print(f"Error: {e}")
+
+
+def _resolver_venta_por_id(ventas: list[Venta], texto: str) -> Venta:
+    if not texto:
+        raise ValorInvalidoError("El id de venta no puede estar vacío.")
+    coincidencias = [v for v in ventas if v.id.startswith(texto)]
+    if len(coincidencias) == 1:
+        return coincidencias[0]
+    if len(coincidencias) > 1:
+        raise ValorInvalidoError(
+            "Hay varias ventas con ese prefijo; usa más caracteres del id."
+        )
+    raise ValorInvalidoError(f"No existe una venta con id {texto}.")
 
 
 # --- Gastos ---

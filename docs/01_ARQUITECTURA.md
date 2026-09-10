@@ -28,7 +28,9 @@ klaris/
 │   ├── precios.py
 │   ├── inventario.py
 │   ├── ventas.py
-│   └── gastos.py
+│   ├── gastos.py
+│   ├── reportes.py
+│   └── devoluciones.py
 ├── persistence/
 │   ├── __init__.py
 │   ├── json_store.py

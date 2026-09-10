@@ -58,6 +58,12 @@ class RepoVentasMemoria:
     def listar(self) -> list[Venta]:
         return list(self._ventas)
 
+    def actualizar(self, venta: Venta) -> None:
+        for i, actual in enumerate(self._ventas):
+            if actual.id == venta.id:
+                self._ventas[i] = venta
+                return
+
 
 def _producto(
     costo: str = "2.50",

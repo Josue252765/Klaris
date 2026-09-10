@@ -5,6 +5,7 @@ from pathlib import Path
 from cli.acciones import (
     accion_actualizar_tasa,
     accion_ajustar_stock,
+    accion_anular_venta,
     accion_buscar_producto,
     accion_cierre_de_caja,
     accion_crear_producto,
@@ -21,6 +22,7 @@ from cli.acciones import (
     accion_vender,
 )
 from config.settings import Settings
+from core.devoluciones import GestorDevoluciones
 from core.gastos import GestorGastos
 from core.inventario import GestorInventario
 from core.producto import GestorProductos
@@ -28,6 +30,7 @@ from core.reportes import GeneradorReportes
 from core.tasas import GestorTasas
 from core.ventas import GestorVentas
 from persistence.repositorios import (
+    RepositorioAnulacionesJSON,
     RepositorioGastosJSON,
     RepositorioMovimientosJSON,
     RepositorioProductosJSON,
@@ -39,7 +42,7 @@ _MENU = """\
 === Klaris ===
 1. Productos
 2. Inventario
-3. Vender
+3. Ventas
 4. Gastos
 5. Tasas de cambio
 6. Reporte del día
@@ -56,6 +59,7 @@ def main() -> None:
     repo_ventas = RepositorioVentasJSON(config.ruta_ventas())
     repo_gastos = RepositorioGastosJSON(config.ruta_gastos())
     repo_tasas = RepositorioTasaJSON(config.ruta_tasas())
+    repo_anulaciones = RepositorioAnulacionesJSON(config.ruta_anulaciones())
 
     gestor_tasas = GestorTasas(repo_tasas)
     gestor_productos = GestorProductos(repo_productos, repo_tasas)
@@ -64,6 +68,9 @@ def main() -> None:
         gestor_inventario, repo_productos, repo_ventas, repo_tasas
     )
     gestor_gastos = GestorGastos(repo_gastos, repo_tasas)
+    gestor_devoluciones = GestorDevoluciones(
+        gestor_ventas, gestor_inventario, repo_anulaciones
+    )
     generador_reportes = GeneradorReportes(gestor_ventas, gestor_gastos, repo_tasas)
 
     while True:
@@ -74,7 +81,7 @@ def main() -> None:
         elif opcion == "2":
             _menu_inventario(gestor_inventario, gestor_productos)
         elif opcion == "3":
-            accion_vender(gestor_ventas, gestor_productos)
+            _menu_ventas(gestor_ventas, gestor_productos, gestor_devoluciones)
         elif opcion == "4":
             _menu_gastos(gestor_gastos)
         elif opcion == "5":
@@ -118,6 +125,20 @@ def _menu_inventario(
         accion_ajustar_stock(gestor_inventario, gestor_productos)
     elif sub == "d":
         accion_ver_stock_bajo(gestor_inventario)
+
+
+def _menu_ventas(
+    gestor_ventas: GestorVentas,
+    gestor_productos: GestorProductos,
+    gestor_devoluciones: GestorDevoluciones,
+) -> None:
+    """Submenú de ventas: vender, anular."""
+    print("  a) Vender  b) Anular venta")
+    sub = input("  Opción: ").strip().lower()
+    if sub == "a":
+        accion_vender(gestor_ventas, gestor_productos)
+    elif sub == "b":
+        accion_anular_venta(gestor_devoluciones, gestor_ventas)
 
 
 def _menu_gastos(gestor_gastos: GestorGastos) -> None:
