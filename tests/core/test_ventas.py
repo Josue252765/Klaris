@@ -1,18 +1,20 @@
 """Tests de core/ventas.py: Carrito y GestorVentas con repositorios en memoria."""
 
 from dataclasses import replace
+from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
 import pytest
 
 from core.inventario import GestorInventario, MovimientoStock
-from core.moneda import Moneda
+from core.moneda import Moneda, TasaCambio
 from core.precios import CalculadoraPrecios
 from core.producto import Producto
 from core.ventas import Carrito, GestorVentas, ItemCarrito, Venta
 from utils.excepciones import (
     CarritoVacioError,
+    MonedaInvalidaError,
     StockInsuficienteError,
     ValorInvalidoError,
 )
@@ -244,3 +246,81 @@ def test_cerrar_venta_fecha_se_genera(
     carrito.agregar_item(producto, 1)
     venta = gestor.cerrar_venta(carrito, Moneda.USD, "efectivo_usd")
     assert venta.fecha is not None
+
+
+# --- Pago en BS (TAREA 2) ---
+
+
+class RepoTasaMemoria:
+    def __init__(self, tasa: TasaCambio | None = None) -> None:
+        self._tasa = tasa
+
+    def obtener_actual(self) -> TasaCambio | None:
+        return self._tasa
+
+
+def _tasa_diaria_42() -> TasaCambio:
+    return TasaCambio(
+        tasa_referencial=Decimal("40"),
+        tasa_referencial_fecha=date(2026, 9, 9),
+        tasa_diaria=Decimal("42"),
+        tasa_diaria_fecha=date(2026, 9, 9),
+    )
+
+
+def test_cerrar_venta_bs_calcula_total_y_vuelto() -> None:
+    repo_prod = RepoProductosMemoria()
+    repo_mov = RepoMovimientosMemoria()
+    repo_ventas = RepoVentasMemoria()
+    repo_tasa = RepoTasaMemoria(_tasa_diaria_42())
+    inventario = GestorInventario(repo_prod, repo_mov)
+    gestor = GestorVentas(inventario, repo_prod, repo_ventas, repo_tasa)
+    producto = _producto(costo="2.50", margen="30", stock=10)
+    repo_prod.guardar(producto)
+    carrito = Carrito()
+    carrito.agregar_item(producto, 3)
+    venta = gestor.cerrar_venta(
+        carrito, Moneda.USD, "efectivo_bs",
+        moneda_pago=Moneda.BS, monto_recibido_bs=Decimal("500"),
+    )
+    assert venta.total == Decimal("9.75")
+    assert venta.total_bs == Decimal("409.50")
+    assert venta.tasa_usada == Decimal("42")
+    assert venta.monto_recibido_bs == Decimal("500")
+    assert venta.vuelto_bs == Decimal("90.50")
+
+
+def test_cerrar_venta_bs_pago_insuficiente_lanza() -> None:
+    repo_prod = RepoProductosMemoria()
+    repo_mov = RepoMovimientosMemoria()
+    repo_ventas = RepoVentasMemoria()
+    repo_tasa = RepoTasaMemoria(_tasa_diaria_42())
+    inventario = GestorInventario(repo_prod, repo_mov)
+    gestor = GestorVentas(inventario, repo_prod, repo_ventas, repo_tasa)
+    producto = _producto(costo="2.50", margen="30", stock=10)
+    repo_prod.guardar(producto)
+    carrito = Carrito()
+    carrito.agregar_item(producto, 3)
+    with pytest.raises(ValorInvalidoError):
+        gestor.cerrar_venta(
+            carrito, Moneda.USD, "efectivo_bs",
+            moneda_pago=Moneda.BS, monto_recibido_bs=Decimal("100"),
+        )
+
+
+def test_cerrar_venta_usd_no_toca_campos_bs() -> None:
+    repo_prod = RepoProductosMemoria()
+    repo_mov = RepoMovimientosMemoria()
+    repo_ventas = RepoVentasMemoria()
+    repo_tasa = RepoTasaMemoria(_tasa_diaria_42())
+    inventario = GestorInventario(repo_prod, repo_mov)
+    gestor = GestorVentas(inventario, repo_prod, repo_ventas, repo_tasa)
+    producto = _producto(costo="2.50", margen="30", stock=10)
+    repo_prod.guardar(producto)
+    carrito = Carrito()
+    carrito.agregar_item(producto, 1)
+    venta = gestor.cerrar_venta(carrito, Moneda.USD, "efectivo_usd")
+    assert venta.total_bs is None
+    assert venta.tasa_usada is None
+    assert venta.monto_recibido_bs is None
+    assert venta.vuelto_bs is None

@@ -5,7 +5,12 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import uuid4
 
-from utils.excepciones import ProductoNoEncontradoError, ValorInvalidoError
+from core.moneda import Moneda, RepositorioTasa
+from utils.excepciones import (
+    MonedaInvalidaError,
+    ProductoNoEncontradoError,
+    ValorInvalidoError,
+)
 
 
 @dataclass(frozen=True)
@@ -82,10 +87,15 @@ class RepositorioProductos(Protocol):
 
 
 class GestorProductos:
-    """CRUD de productos sobre un repositorio inyectado por constructor."""
+    """CRUD de productos sobre repositorios inyectados por constructor."""
 
-    def __init__(self, repositorio: RepositorioProductos) -> None:
+    def __init__(
+        self,
+        repositorio: RepositorioProductos,
+        repo_tasa: RepositorioTasa | None = None,
+    ) -> None:
         self._repositorio = repositorio
+        self._repo_tasa = repo_tasa
 
     def crear(
         self,
@@ -96,13 +106,15 @@ class GestorProductos:
         stock_inicial: int,
         stock_minimo: int,
         unidad_medida: str,
+        costo_moneda: Moneda = Moneda.USD,
     ) -> Producto:
         """Construye, guarda y devuelve un producto nuevo; lanza ValorInvalidoError."""
+        costo_usd = self._convertir_costo_a_usd(costo_unitario, costo_moneda)
         producto = Producto(
             id=str(uuid4()),
             nombre=nombre,
             categoria=categoria,
-            costo_unitario=costo_unitario,
+            costo_unitario=costo_usd,
             margen_ganancia=margen_ganancia,
             stock_actual=stock_inicial,
             stock_minimo=stock_minimo,
@@ -118,9 +130,17 @@ class GestorProductos:
             raise ProductoNoEncontradoError(f"No existe un producto con id {id}.")
         return producto
 
-    def actualizar(self, id: str, **campos: object) -> Producto:
+    def actualizar(
+        self, id: str, costo_moneda: Moneda = Moneda.USD, **campos: object
+    ) -> Producto:
         """Reconstruye el producto aplicando cambios; el id nunca se modifica."""
+        if "id" in campos:
+            raise ValorInvalidoError("El id de un producto es inmutable.")
         producto = self.obtener(id)
+        if "costo_unitario" in campos and costo_moneda == Moneda.BS:
+            campos["costo_unitario"] = self._convertir_costo_a_usd(
+                Decimal(campos["costo_unitario"]), costo_moneda
+            )
         actualizado = replace(producto, **campos)
         self._repositorio.actualizar(actualizado)
         return actualizado
@@ -144,3 +164,20 @@ class GestorProductos:
         return [
             p for p in self._repositorio.listar() if patron in p.nombre.lower()
         ]
+
+    def _convertir_costo_a_usd(
+        self, costo: Decimal, moneda: Moneda
+    ) -> Decimal:
+        """Convierte el costo a USD si viene en BS, usando tasa_referencial."""
+        if moneda == Moneda.USD:
+            return costo
+        if self._repo_tasa is None:
+            raise MonedaInvalidaError(
+                "No hay repositorio de tasa configurado para convertir BS."
+            )
+        tasa = self._repo_tasa.obtener_actual()
+        if tasa is None:
+            raise MonedaInvalidaError(
+                "No hay tasa referencial guardada para convertir BS a USD."
+            )
+        return tasa.convertir(costo, Moneda.BS, Moneda.USD, "referencial")

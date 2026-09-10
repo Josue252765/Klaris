@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from enum import Enum
-from typing import Literal
+from typing import Literal, Protocol
 
 from utils.excepciones import MonedaInvalidaError, ValorInvalidoError
 
@@ -66,3 +66,9 @@ class TasaCambio:
             raise ValorInvalidoError(f"{campo} debe ser Decimal, nunca float.")
         if valor <= 0:
             raise ValorInvalidoError(f"{campo} debe ser mayor a cero.")
+
+
+class RepositorioTasa(Protocol):
+    """Contrato de persistencia de la tasa de cambio vigente."""
+
+    def obtener_actual(self) -> TasaCambio | None: ...

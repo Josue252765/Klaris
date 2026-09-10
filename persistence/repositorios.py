@@ -116,6 +116,10 @@ class RepositorioVentasJSON:
             "moneda": v.moneda.value,
             "metodo_pago": v.metodo_pago,
             "fecha": v.fecha.isoformat(),
+            "total_bs": str(v.total_bs) if v.total_bs is not None else None,
+            "tasa_usada": str(v.tasa_usada) if v.tasa_usada is not None else None,
+            "monto_recibido_bs": str(v.monto_recibido_bs) if v.monto_recibido_bs is not None else None,
+            "vuelto_bs": str(v.vuelto_bs) if v.vuelto_bs is not None else None,
         }
 
     def _deserializar(self, r: dict) -> Venta:
@@ -134,6 +138,10 @@ class RepositorioVentasJSON:
             moneda=Moneda(r["moneda"]),
             metodo_pago=r["metodo_pago"],
             fecha=datetime.fromisoformat(r["fecha"]),
+            total_bs=Decimal(r["total_bs"]) if r.get("total_bs") is not None else None,
+            tasa_usada=Decimal(r["tasa_usada"]) if r.get("tasa_usada") is not None else None,
+            monto_recibido_bs=Decimal(r["monto_recibido_bs"]) if r.get("monto_recibido_bs") is not None else None,
+            vuelto_bs=Decimal(r["vuelto_bs"]) if r.get("vuelto_bs") is not None else None,
         )
 
 
@@ -159,6 +167,9 @@ class RepositorioGastosJSON:
             "monto": str(g.monto),
             "moneda": g.moneda.value,
             "fecha": g.fecha.isoformat(),
+            "monto_original": str(g.monto_original) if g.monto_original is not None else None,
+            "moneda_original": g.moneda_original.value if g.moneda_original is not None else None,
+            "tasa_usada": str(g.tasa_usada) if g.tasa_usada is not None else None,
         }
 
     def _deserializar(self, r: dict) -> Gasto:
@@ -169,6 +180,9 @@ class RepositorioGastosJSON:
             monto=Decimal(r["monto"]),
             moneda=Moneda(r["moneda"]),
             fecha=datetime.fromisoformat(r["fecha"]),
+            monto_original=Decimal(r["monto_original"]) if r.get("monto_original") is not None else None,
+            moneda_original=Moneda(r["moneda_original"]) if r.get("moneda_original") is not None else None,
+            tasa_usada=Decimal(r["tasa_usada"]) if r.get("tasa_usada") is not None else None,
         )
 
 

@@ -2,12 +2,18 @@
 
 from decimal import Decimal
 from dataclasses import FrozenInstanceError
+from datetime import date
 from uuid import UUID
 
 import pytest
 
+from core.moneda import Moneda, TasaCambio
 from core.producto import GestorProductos, Producto
-from utils.excepciones import ProductoNoEncontradoError, ValorInvalidoError
+from utils.excepciones import (
+    MonedaInvalidaError,
+    ProductoNoEncontradoError,
+    ValorInvalidoError,
+)
 
 
 def _producto_valido(**sobrescribir: object) -> Producto:
@@ -195,3 +201,90 @@ def test_buscar_por_nombre_ignora_mayusculas(gestor: GestorProductos) -> None:
     resultado = gestor.buscar_por_nombre("HARINA")
     assert len(resultado) == 1
     assert resultado[0].nombre == "Harina de maíz"
+
+
+class RepoTasaMemoria:
+    """Repositorio falso de tasa en memoria."""
+
+    def __init__(self, tasa: TasaCambio | None = None) -> None:
+        self._tasa = tasa
+
+    def obtener_actual(self) -> TasaCambio | None:
+        return self._tasa
+
+
+def _tasa_ref_40() -> TasaCambio:
+    return TasaCambio(
+        tasa_referencial=Decimal("40"),
+        tasa_referencial_fecha=date(2026, 9, 9),
+        tasa_diaria=Decimal("42"),
+        tasa_diaria_fecha=date(2026, 9, 9),
+    )
+
+
+def test_crear_producto_costo_bs_convierte_a_usd() -> None:
+    repo_prod = RepositorioEnMemoria()
+    repo_tasa = RepoTasaMemoria(_tasa_ref_40())
+    gestor = GestorProductos(repo_prod, repo_tasa)
+    producto = gestor.crear(
+        nombre="Harina",
+        categoria="Alimentos",
+        costo_unitario=Decimal("100"),
+        margen_ganancia=Decimal("30"),
+        stock_inicial=5,
+        stock_minimo=1,
+        unidad_medida="kg",
+        costo_moneda=Moneda.BS,
+    )
+    assert producto.costo_unitario == Decimal("2.50")
+
+
+def test_crear_producto_costo_bs_sin_tasa_lanza() -> None:
+    repo_prod = RepositorioEnMemoria()
+    repo_tasa = RepoTasaMemoria(None)
+    gestor = GestorProductos(repo_prod, repo_tasa)
+    with pytest.raises(MonedaInvalidaError):
+        gestor.crear(
+            nombre="Harina",
+            categoria="Alimentos",
+            costo_unitario=Decimal("100"),
+            margen_ganancia=Decimal("30"),
+            stock_inicial=5,
+            stock_minimo=1,
+            unidad_medida="kg",
+            costo_moneda=Moneda.BS,
+        )
+
+
+def test_crear_producto_costo_usd_no_convierte() -> None:
+    repo_prod = RepositorioEnMemoria()
+    gestor = GestorProductos(repo_prod)
+    producto = gestor.crear(
+        nombre="Harina",
+        categoria="Alimentos",
+        costo_unitario=Decimal("2.50"),
+        margen_ganancia=Decimal("30"),
+        stock_inicial=5,
+        stock_minimo=1,
+        unidad_medida="kg",
+    )
+    assert producto.costo_unitario == Decimal("2.50")
+
+
+def test_actualizar_producto_costo_bs_convierte() -> None:
+    repo_prod = RepositorioEnMemoria()
+    repo_tasa = RepoTasaMemoria(_tasa_ref_40())
+    gestor = GestorProductos(repo_prod, repo_tasa)
+    producto = gestor.crear(
+        nombre="Sal",
+        categoria="Alimentos",
+        costo_unitario=Decimal("1.00"),
+        margen_ganancia=Decimal("20"),
+        stock_inicial=8,
+        stock_minimo=2,
+        unidad_medida="kg",
+    )
+    actualizado = gestor.actualizar(
+        producto.id, costo_moneda=Moneda.BS, costo_unitario=Decimal("100")
+    )
+    assert actualizado.costo_unitario == Decimal("2.50")

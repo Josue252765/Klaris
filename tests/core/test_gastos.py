@@ -6,7 +6,7 @@ from decimal import Decimal
 import pytest
 
 from core.gastos import CategoriaGasto, Gasto, GestorGastos
-from core.moneda import Moneda
+from core.moneda import Moneda, TasaCambio
 from utils.excepciones import MonedaInvalidaError, ValorInvalidoError
 
 
@@ -19,6 +19,23 @@ class RepoGastosMemoria:
 
     def listar(self) -> list[Gasto]:
         return list(self._gastos)
+
+
+class RepoTasaMemoria:
+    def __init__(self, tasa: TasaCambio | None = None) -> None:
+        self._tasa = tasa
+
+    def obtener_actual(self) -> TasaCambio | None:
+        return self._tasa
+
+
+def _tasa_diaria_42() -> TasaCambio:
+    return TasaCambio(
+        tasa_referencial=Decimal("40"),
+        tasa_referencial_fecha=date(2026, 9, 9),
+        tasa_diaria=Decimal("42"),
+        tasa_diaria_fecha=date(2026, 9, 9),
+    )
 
 
 @pytest.fixture()
@@ -115,13 +132,48 @@ def test_total_periodo_suma_usd(gestor: GestorGastos) -> None:
     assert total == Decimal("30.50")
 
 
-def test_total_periodo_ignota_bs_sin_tasa(gestor: GestorGastos) -> None:
+def test_gasto_bs_convierte_y_guarda_trazabilidad() -> None:
+    repo_gastos = RepoGastosMemoria()
+    repo_tasa = RepoTasaMemoria(_tasa_diaria_42())
+    gestor = GestorGastos(repo_gastos, repo_tasa)
+    gasto = gestor.registrar(
+        CategoriaGasto.MERCANCIA, "Compra", Decimal("420"), Moneda.BS
+    )
+    assert gasto.monto == Decimal("10.00")
+    assert gasto.monto_original == Decimal("420")
+    assert gasto.moneda_original == Moneda.BS
+    assert gasto.tasa_usada == Decimal("42")
+
+
+def test_gasto_usd_guarda_origen_sin_tasa() -> None:
+    repo_gastos = RepoGastosMemoria()
+    gestor = GestorGastos(repo_gastos)
+    gasto = gestor.registrar(
+        CategoriaGasto.MERCANCIA, "Compra", Decimal("50"), Moneda.USD
+    )
+    assert gasto.monto_original == Decimal("50")
+    assert gasto.moneda_original == Moneda.USD
+    assert gasto.tasa_usada is None
+
+
+def test_total_periodo_suma_mixto_sin_lanzar() -> None:
+    repo_gastos = RepoGastosMemoria()
+    repo_tasa = RepoTasaMemoria(_tasa_diaria_42())
+    gestor = GestorGastos(repo_gastos, repo_tasa)
     gestor.registrar(CategoriaGasto.MERCANCIA, "a", Decimal("10"), Moneda.USD)
-    gestor.registrar(CategoriaGasto.MERCANCIA, "b", Decimal("20"), Moneda.BS)
+    gestor.registrar(CategoriaGasto.MERCANCIA, "b", Decimal("420"), Moneda.BS)
+    total = gestor.total_periodo(
+        date.today() - timedelta(days=1), date.today() + timedelta(days=1)
+    )
+    assert total == Decimal("20.00")
+
+
+def test_gasto_bs_sin_tasa_lanza() -> None:
+    repo_gastos = RepoGastosMemoria()
+    repo_tasa = RepoTasaMemoria(None)
+    gestor = GestorGastos(repo_gastos, repo_tasa)
     with pytest.raises(MonedaInvalidaError):
-        gestor.total_periodo(
-            date.today() - timedelta(days=1), date.today() + timedelta(days=1)
-        )
+        gestor.registrar(CategoriaGasto.MERCANCIA, "a", Decimal("100"), Moneda.BS)
 
 
 def test_total_periodo_rango_vacio_devuelve_cero(gestor: GestorGastos) -> None:
