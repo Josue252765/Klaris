@@ -22,10 +22,10 @@ Cada uno envuelve un `JsonStore` y hace la conversión objeto ↔ dict. Aísla a
 
 | Repositorio | Archivo |
 |---|---|
-| `ProductoRepository` | `data/productos.json` |
-| `VentaRepository` | `data/ventas.json` |
-| `GastoRepository` | `data/gastos.json` |
-| `MovimientoStockRepository` | `data/movimientos_stock.json` |
+| `RepositorioProductosJSON` | `data/productos.json` |
+| `RepositorioVentasJSON` | `data/ventas.json` |
+| `RepositorioGastosJSON` | `data/gastos.json` |
+| `RepositorioMovimientosJSON` | `data/movimientos_stock.json` |
 | `RepositorioTasaJSON` | `data/tasas.json` (registro único) |
 
 Cada archivo contiene una lista JSON de objetos (`[]` si está vacío). Si el archivo no existe al leer, `JsonStore` lo crea vacío — no lanza error.
@@ -43,7 +43,7 @@ Los `Gestor*` de `core/` reciben su repositorio en el constructor, no lo instanc
 
 ```python
 gestor_ventas = GestorVentas(
-    venta_repo=VentaRepository(...),
-    inventario=GestorInventario(movimiento_repo=...)
+    venta_repo=RepositorioVentasJSON(...),
+    inventario=GestorInventario(movimiento_repo=RepositorioMovimientosJSON(...))
 )
 ```

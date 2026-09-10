@@ -1,6 +1,6 @@
 # Decisiones de diseño — Klaris
 
-> Cada vez que se tome una decisión que se desvía de `KLARIS_BACKEND_SPEC.md`, o que la spec deja ambigua, se registra aquí con fecha y razón. El agente debe revisar este archivo antes de tomar decisiones de arquitectura — si algo ya se decidió aquí, no lo cambia sin preguntar primero.
+> Cada vez que se tome una decisión que se desvía de `docs/modulos/*.md` o `docs/01_ARQUITECTURA.md`, o que la spec deja ambigua, se registra aquí con fecha y razón. El agente debe revisar este archivo antes de tomar decisiones de arquitectura — si algo ya se decidió aquí, no lo cambia sin preguntar primero.
 
 ## Formato de cada entrada
 
@@ -13,10 +13,10 @@
 
 ## Registro
 
-### [2026-09-09] total_periodo de gastos: normalización a USD sin TasaCambio
-- Contexto: `gastos.md` define `total_periodo` como "total normalizado a USD", pero `TasaCambio` (módulo `core/moneda.py`) aún no está implementado — solo existe el enum `Moneda`.
-- Decisión: `total_periodo` suma directamente los gastos en USD; si encuentra un gasto en BS lanza `MonedaInvalidaError` indicando que TasaCambio no está implementada.
-- Razón: no inventar una conversión sin tasa real violaría la promesa "el dueño nunca pierde un centavo". Mejor fallar honestamente que suponer una tasa ficticia.
+### [2026-09-09] total_periodo de gastos: normalización a USD con TasaCambio integrado
+- Contexto: `gastos.md` define `total_periodo` como "total normalizado a USD". Originalmente `TasaCambio` no existía y `total_periodo` lanzaba `MonedaInvalidaError` para gastos en BS. Hoy `TasaCambio` está implementado e integrado en `GestorGastos`: los gastos en BS se convierten a USD con `tasa_diaria` al momento del registro, y `total_periodo` simplemente suma el campo `monto` (ya en USD).
+- Decisión: `total_periodo` suma directamente el campo `monto` de cada gasto (todos en USD tras la conversión al registrar). No recalcular con la tasa actual — así nunca cambia retroactivamente.
+- Razón: la promesa "el dueño nunca pierde un centavo" exige que un gasto registrado no cambie de valor si la tasa de hoy cambia. Fijar el monto en USD al registrar lo resuelve.
 
 ### [2026-09-09] margen_real lanza ValorInvalidoError si costo == 0
 - Contexto: `precios.md` dejaba la columna "Lanza" de `margen_real` vacía. El código ya lanzaba `ValorInvalidoError` cuando `costo == 0` (división por cero), pero no estaba documentado en la spec.

@@ -6,7 +6,7 @@ Este archivo es leído automáticamente por el agente antes de cada tarea. No lo
 
 Klaris es un sistema de gestión financiera para bodegas/negocios pequeños en Venezuela. Backend en Python puro, 100% offline, persistencia en JSON, sin frameworks web, sin SQL, sin auth (MVP).
 
-La especificación técnica completa está en `docs/KLARIS_BACKEND_SPEC.md`. **Léela antes de escribir cualquier código.** Es la fuente de verdad de arquitectura, módulos, clases y reglas de negocio. Si algo en una tarea contradice ese documento, avisa antes de proceder — no lo ignores ni lo reinterpretes por tu cuenta.
+La especificación técnica está en `docs/modulos/*.md` (un archivo por módulo) y `docs/01_ARQUITECTURA.md`. **Léelas antes de escribir cualquier código.** Son la fuente de verdad de arquitectura, módulos, clases y reglas de negocio. Si algo en una tarea contradice esos documentos, avisa antes de proceder — no lo ignores ni lo reinterpretes por tu cuenta.
 
 ## Reglas de salida de código (obligatorias)
 
@@ -16,8 +16,8 @@ La especificación técnica completa está en `docs/KLARIS_BACKEND_SPEC.md`. **L
    - Comentarios explicativos excesivos de lo obvio (`# esto es un for que recorre la lista`). Comenta solo decisiones no evidentes o reglas de negocio.
    - Docstrings genéricos de relleno. Cada docstring debe decir algo real: qué hace, qué recibe, qué devuelve, qué excepción lanza — nada más.
 2. El código debe verse como si lo escribiera un desarrollador senior humano cuidadoso: consistente, sin bloques de "ejemplo de uso" sobrantes, sin imports no usados, sin TODOs vacíos.
-3. Sigue exactamente las convenciones de `docs/KLARIS_BACKEND_SPEC.md` §9 (PEP 8, type hints, `Decimal` para dinero, nombres en español para dominio).
-4. No agregues funcionalidad fuera del alcance del MVP (spec §12) aunque parezca "fácil de dejar lista".
+3. Sigue exactamente las convenciones de `docs/02_CONVENCIONES.md` (PEP 8, type hints, `Decimal` para dinero, nombres en español para dominio).
+4. No agregues funcionalidad fuera del alcance del MVP (`docs/01_ARQUITECTURA.md` → "Fuera de alcance") aunque parezca "fácil de dejar lista".
 
 ## Flujo de trabajo esperado
 
@@ -29,7 +29,7 @@ La especificación técnica completa está en `docs/KLARIS_BACKEND_SPEC.md`. **L
 
 ## Estructura del repo
 
-Ver `docs/KLARIS_BACKEND_SPEC.md` §5 para el árbol completo de carpetas. No crear carpetas fuera de esa estructura sin justificarlo.
+Ver `docs/01_ARQUITECTURA.md` para el árbol completo de carpetas. No crear carpetas fuera de esa estructura sin justificarlo.
 
 ## Comandos útiles
 
