@@ -45,6 +45,14 @@ class Settings:
         """Devuelve la ruta del archivo de anulaciones de venta."""
         return self.directorio_datos / "anulaciones.json"
 
+    def ruta_clientes(self) -> Path:
+        """Devuelve la ruta del archivo de clientes."""
+        return self.directorio_datos / "clientes.json"
+
+    def ruta_abonos(self) -> Path:
+        """Devuelve la ruta del archivo de abonos."""
+        return self.directorio_datos / "abonos.json"
+
     def _validar_nombre(self, nombre: str) -> None:
         if not isinstance(nombre, str) or not nombre.strip():
             raise ValorInvalidoError("El nombre del negocio no puede estar vacío.")

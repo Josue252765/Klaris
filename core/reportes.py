@@ -51,7 +51,7 @@ class RepositorioProductosNombres(Protocol):
 class GeneradorReportes:
     """Compone reportes a partir de gestores de ventas y gastos."""
 
-    _METODOS = ("efectivo_usd", "efectivo_bs", "pago_movil", "otro")
+    _METODOS = ("efectivo_usd", "efectivo_bs", "pago_movil", "otro", "credito")
 
     def __init__(
         self,

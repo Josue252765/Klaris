@@ -170,7 +170,7 @@ def test_cierre_dia_sin_ventas_ni_gastos():
     assert cierre.total_ventas_usd == Decimal("0")
     assert cierre.total_gastos_usd == Decimal("0")
     assert cierre.balance_neto_usd == Decimal("0")
-    assert len(cierre.desglose_pago) == 4
+    assert len(cierre.desglose_pago) == 5
 
 
 def test_cierre_con_una_venta_efectivo_usd():

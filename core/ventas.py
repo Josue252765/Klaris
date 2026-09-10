@@ -18,7 +18,13 @@ from utils.excepciones import (
     ValorInvalidoError,
 )
 
-METODOS_PAGO_VALIDOS = {"efectivo_usd", "efectivo_bs", "pago_movil", "otro"}
+METODOS_PAGO_VALIDOS = {
+    "efectivo_usd",
+    "efectivo_bs",
+    "pago_movil",
+    "otro",
+    "credito",
+}
 
 
 @dataclass(frozen=True)
@@ -100,6 +106,7 @@ class Venta:
     monto_recibido_bs: Decimal | None = None
     vuelto_bs: Decimal | None = None
     anulada: bool = False
+    cliente_id: str | None = None
 
 
 class RepositorioVentas(Protocol):
@@ -134,15 +141,17 @@ class GestorVentas:
         metodo_pago: str,
         moneda_pago: Moneda = Moneda.USD,
         monto_recibido_bs: Decimal | None = None,
+        cliente_id: str | None = None,
     ) -> Venta:
         """Valida pago y stock, descuenta stock, persiste y devuelve la venta cerrada."""
         self._validar_carrito_no_vacio(carrito)
-        self._validar_metodo_pago(metodo_pago)
+        self._validar_metodo_y_cliente(metodo_pago, cliente_id)
         self._validar_stock_de_todo(carrito)
-        self._validar_pago_bs(carrito.total(), moneda_pago, monto_recibido_bs)
+        if metodo_pago != "credito":
+            self._validar_pago_bs(carrito.total(), moneda_pago, monto_recibido_bs)
         self._descontar_stock(carrito)
         venta = self._construir_venta(
-            carrito, moneda, metodo_pago, moneda_pago, monto_recibido_bs
+            carrito, moneda, metodo_pago, moneda_pago, monto_recibido_bs, cliente_id
         )
         self._ventas.guardar(venta)
         return venta
@@ -186,9 +195,15 @@ class GestorVentas:
         if carrito.esta_vacio():
             raise CarritoVacioError("No se puede cerrar una venta con el carrito vacío.")
 
-    def _validar_metodo_pago(self, metodo_pago: str) -> None:
+    def _validar_metodo_y_cliente(
+        self, metodo_pago: str, cliente_id: str | None
+    ) -> None:
         if metodo_pago not in METODOS_PAGO_VALIDOS:
             raise ValorInvalidoError(f"Método de pago inválido: {metodo_pago}.")
+        if metodo_pago == "credito" and not (
+            isinstance(cliente_id, str) and cliente_id.strip()
+        ):
+            raise ValorInvalidoError("La venta a crédito requiere un cliente.")
 
     def _validar_pago_bs(
         self, total_usd: Decimal, moneda_pago: Moneda,
@@ -234,9 +249,10 @@ class GestorVentas:
         metodo_pago: str,
         moneda_pago: Moneda,
         monto_recibido_bs: Decimal | None,
+        cliente_id: str | None,
     ) -> Venta:
         total_usd = carrito.total()
-        if moneda_pago == Moneda.BS:
+        if metodo_pago != "credito" and moneda_pago == Moneda.BS:
             total_bs, tasa, vuelto = self._calcular_pago_bs(total_usd, monto_recibido_bs)
         else:
             total_bs, tasa, vuelto = None, None, None
@@ -250,6 +266,7 @@ class GestorVentas:
             tasa_usada=tasa,
             monto_recibido_bs=monto_recibido_bs,
             vuelto_bs=vuelto,
+            cliente_id=cliente_id,
         )
 
     def _calcular_pago_bs(

@@ -13,15 +13,19 @@ from cli.acciones import (
     accion_entrada_inventario,
     accion_listar_gastos,
     accion_listar_productos,
+    accion_registrar_abono,
+    accion_registrar_cliente,
     accion_registrar_gasto,
     accion_reporte_dia,
     accion_salida_inventario,
     accion_top_productos,
+    accion_ver_clientes_deudas,
     accion_ver_stock_bajo,
     accion_ver_tasa,
     accion_vender,
 )
 from config.settings import Settings
+from core.clientes import GestorClientes
 from core.devoluciones import GestorDevoluciones
 from core.gastos import GestorGastos
 from core.inventario import GestorInventario
@@ -30,7 +34,9 @@ from core.reportes import GeneradorReportes
 from core.tasas import GestorTasas
 from core.ventas import GestorVentas
 from persistence.repositorios import (
+    RepositorioAbonosJSON,
     RepositorioAnulacionesJSON,
+    RepositorioClientesJSON,
     RepositorioGastosJSON,
     RepositorioMovimientosJSON,
     RepositorioProductosJSON,
@@ -47,7 +53,8 @@ _MENU = """\
 5. Tasas de cambio
 6. Reporte del día
 7. Reportes y cierre de caja
-8. Salir
+8. Clientes y Cuentas por Cobrar
+9. Salir
 """
 
 
@@ -60,6 +67,8 @@ def main() -> None:
     repo_gastos = RepositorioGastosJSON(config.ruta_gastos())
     repo_tasas = RepositorioTasaJSON(config.ruta_tasas())
     repo_anulaciones = RepositorioAnulacionesJSON(config.ruta_anulaciones())
+    repo_clientes = RepositorioClientesJSON(config.ruta_clientes())
+    repo_abonos = RepositorioAbonosJSON(config.ruta_abonos())
 
     gestor_tasas = GestorTasas(repo_tasas)
     gestor_productos = GestorProductos(repo_productos, repo_tasas)
@@ -71,6 +80,9 @@ def main() -> None:
     gestor_devoluciones = GestorDevoluciones(
         gestor_ventas, gestor_inventario, repo_anulaciones
     )
+    gestor_clientes = GestorClientes(
+        repo_clientes, repo_abonos, gestor_ventas, repo_tasas
+    )
     generador_reportes = GeneradorReportes(gestor_ventas, gestor_gastos, repo_tasas)
 
     while True:
@@ -81,7 +93,9 @@ def main() -> None:
         elif opcion == "2":
             _menu_inventario(gestor_inventario, gestor_productos)
         elif opcion == "3":
-            _menu_ventas(gestor_ventas, gestor_productos, gestor_devoluciones)
+            _menu_ventas(
+                gestor_ventas, gestor_productos, gestor_devoluciones, gestor_clientes
+            )
         elif opcion == "4":
             _menu_gastos(gestor_gastos)
         elif opcion == "5":
@@ -91,6 +105,8 @@ def main() -> None:
         elif opcion == "7":
             _menu_reportes(generador_reportes, repo_productos)
         elif opcion == "8":
+            _menu_clientes(gestor_clientes)
+        elif opcion == "9":
             print("Hasta luego.")
             break
         else:
@@ -131,12 +147,13 @@ def _menu_ventas(
     gestor_ventas: GestorVentas,
     gestor_productos: GestorProductos,
     gestor_devoluciones: GestorDevoluciones,
+    gestor_clientes: GestorClientes,
 ) -> None:
     """Submenú de ventas: vender, anular."""
     print("  a) Vender  b) Anular venta")
     sub = input("  Opción: ").strip().lower()
     if sub == "a":
-        accion_vender(gestor_ventas, gestor_productos)
+        accion_vender(gestor_ventas, gestor_productos, gestor_clientes)
     elif sub == "b":
         accion_anular_venta(gestor_devoluciones, gestor_ventas)
 
@@ -169,6 +186,18 @@ def _menu_reportes(generador: GeneradorReportes, repo_productos) -> None:
         accion_cierre_de_caja(generador)
     elif sub == "b":
         accion_top_productos(generador, repo_productos)
+
+
+def _menu_clientes(gestor_clientes: GestorClientes) -> None:
+    """Submenú de clientes: registrar, ver deudas, abonar."""
+    print("  a) Registrar cliente  b) Ver clientes y deudas  c) Registrar abono")
+    sub = input("  Opción: ").strip().lower()
+    if sub == "a":
+        accion_registrar_cliente(gestor_clientes)
+    elif sub == "b":
+        accion_ver_clientes_deudas(gestor_clientes)
+    elif sub == "c":
+        accion_registrar_abono(gestor_clientes)
 
 
 if __name__ == "__main__":

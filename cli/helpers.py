@@ -81,7 +81,9 @@ def _buscar_producto(gestor: GestorProductos, texto: str):
 
 def pedir_metodo_pago() -> str:
     """Pide el método de pago y lo valida contra los permitidos."""
-    metodo = input("Método de pago (efectivo_usd/efectivo_bs/pago_movil/otro): ").strip()
+    metodo = input(
+        "Método de pago (efectivo_usd/efectivo_bs/pago_movil/otro/credito): "
+    ).strip()
     if metodo not in METODOS_PAGO_VALIDOS:
         raise ValorInvalidoError(f"Método de pago inválido: {metodo}.")
     return metodo

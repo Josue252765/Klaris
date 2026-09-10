@@ -31,7 +31,7 @@ def test_cli_sesion_completa(capsys, monkeypatch, tmp_path) -> None:
         "3", "a",
         marcador, "2", "listo", "efectivo_usd", "USD",
         "6", "",
-        "8",
+        "9",
     ]
 
     def fake_input(prompt=""):
