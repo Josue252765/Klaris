@@ -8,13 +8,14 @@ import pytest
 
 from core.gastos import CategoriaGasto, Gasto
 from core.inventario import MovimientoStock
-from core.moneda import Moneda
+from core.moneda import Moneda, TasaCambio
 from core.producto import Producto
 from core.ventas import ItemCarrito, Venta
 from persistence.repositorios import (
     RepositorioGastosJSON,
     RepositorioMovimientosJSON,
     RepositorioProductosJSON,
+    RepositorioTasaJSON,
     RepositorioVentasJSON,
 )
 
@@ -131,3 +132,53 @@ def test_producto_uuid_valido_tras_roundtrip(tmp_path) -> None:
     repo.guardar(producto)
     recuperado = repo.obtener(producto.id)
     UUID(recuperado.id)
+
+
+def test_tasa_obtener_actual_sin_guardar_devuelve_none(tmp_path) -> None:
+    repo = RepositorioTasaJSON(tmp_path / "tasas.json")
+    assert repo.obtener_actual() is None
+
+
+def test_tasa_guardar_y_obtener_actual_roundtrip(tmp_path) -> None:
+    from datetime import date
+
+    repo = RepositorioTasaJSON(tmp_path / "tasas.json")
+    tasa = TasaCambio(
+        tasa_referencial=Decimal("40"),
+        tasa_referencial_fecha=date(2026, 9, 9),
+        tasa_diaria=Decimal("42"),
+        tasa_diaria_fecha=date(2026, 9, 9),
+    )
+    repo.guardar(tasa)
+    recuperada = repo.obtener_actual()
+    assert recuperada is not None
+    assert recuperada.tasa_referencial == Decimal("40")
+    assert isinstance(recuperada.tasa_referencial, Decimal)
+    assert recuperada.tasa_diaria == Decimal("42")
+    assert recuperada.tasa_diaria_fecha == date(2026, 9, 9)
+
+
+def test_tasa_guardar_sobrescribe_unico_registro(tmp_path) -> None:
+    from datetime import date
+
+    repo = RepositorioTasaJSON(tmp_path / "tasas.json")
+    repo.guardar(
+        TasaCambio(
+            tasa_referencial=Decimal("40"),
+            tasa_referencial_fecha=date(2026, 9, 9),
+            tasa_diaria=Decimal("42"),
+            tasa_diaria_fecha=date(2026, 9, 9),
+        )
+    )
+    repo.guardar(
+        TasaCambio(
+            tasa_referencial=Decimal("50"),
+            tasa_referencial_fecha=date(2026, 9, 10),
+            tasa_diaria=Decimal("52"),
+            tasa_diaria_fecha=date(2026, 9, 10),
+        )
+    )
+    recuperada = repo.obtener_actual()
+    assert recuperada is not None
+    assert recuperada.tasa_referencial == Decimal("50")
+    assert recuperada.tasa_diaria_fecha == date(2026, 9, 10)

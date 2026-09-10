@@ -4,8 +4,8 @@
 
 ## Fase actual
 
-- **Completadas:** setup, moneda (enum), producto, precios, inventario, ventas, gastos, persistencia (json_store + 4 repositorios), config/settings, utils/formatos, utils/validadores — 106/106 tests pasando.
-- **Pendiente del MVP:** moneda (TasaCambio), main.py.
+- **Completadas:** setup, moneda (enum + TasaCambio), producto, precios, inventario, ventas, gastos, persistencia (json_store + 5 repositorios), config/settings, utils/formatos, utils/validadores — 117/117 tests pasando.
+- **Pendiente del MVP:** main.py.
 - **Fuera de alcance (v2, no tocar):** empleados, auth, SQLite, reportes, web.
 
 ## Últimas sesiones
@@ -19,6 +19,7 @@ _(el agente agrega una línea nueva al final de cada sesión, formato: fecha —
 - 2026-09-09 — Implementado core/gastos.py (CategoriaGasto, Gasto, GestorGastos) con tests. 60/60 pasando. Decisión registrada en DECISIONES.md sobre total_periodo sin TasaCambio.
 - 2026-09-09 — Implementada persistencia: json_store.py (escritura atómica) + repositorios.py (4 repositorios JSON con serialización Decimal/datetime/enum). 80/80 pasando.
 - 2026-09-09 — Implementados config/settings.py (Settings central), utils/formatos.py (moneda+fechas), utils/validadores.py (texto/montos/opciones) con tests. 106/106 pasando.
+- 2026-09-09 — Implementado TasaCambio en core/moneda.py + RepositorioTasaJSON en persistence/repositorios.py + ruta_tasas() en config/settings.py con tests. 117/117 pasando. Decisión registrada en DECISIONES.md (archivo propio sobre ampliar Settings).
 
 ## Decisiones pendientes / dudas abiertas
 
@@ -29,3 +30,7 @@ _(cosas que el agente no debe decidir solo — preguntarte a ti)_
 ## Bugs conocidos
 
 _(ninguno aún)_
+
+## Roadmap a futuro
+
+Ver `docs/ROADMAP_FUTURO.md` — módulos previstos post-MVP. No se construyen hasta terminar el MVP actual.

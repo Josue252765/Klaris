@@ -37,6 +37,10 @@ class Settings:
         """Devuelve la ruta del archivo de movimientos de stock."""
         return self.directorio_datos / "movimientos_stock.json"
 
+    def ruta_tasas(self) -> Path:
+        """Devuelve la ruta del archivo de tasas de cambio."""
+        return self.directorio_datos / "tasas.json"
+
     def _validar_nombre(self, nombre: str) -> None:
         if not isinstance(nombre, str) or not nombre.strip():
             raise ValorInvalidoError("El nombre del negocio no puede estar vacío.")

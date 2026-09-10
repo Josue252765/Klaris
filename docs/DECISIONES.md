@@ -37,3 +37,8 @@
 - Contexto: `validadores.py` y `settings.py` lanzaban `ValueError` nativo de Python, mientras que el resto de `core/` usa `ValorInvalidoError` (que hereda de `KlarisError`). Esto rompía la jerarquía de excepciones de dominio definida en `02_CONVENCIONES.md`.
 - Decisión: reemplazar todo `ValueError` por `ValorInvalidoError` de `utils/excepciones.py`. Mantener `TypeError` donde era apropiado (tipo incorrecto, no valor inválido). Ajustar tests.
 - Razón: mantener una sola jerarquía de excepciones de dominio permite que `main.py` capture `KlarisError` al nivel superior sin漏ar excepciones nativas.
+
+### [2026-09-09] TasaCambio: persistencia en archivo propio (no ampliar Settings)
+- Contexto: había dos opciones para persistir `TasaCambio`: (A) ampliar `config/settings.py` con los atributos de tasa, o (B) crear `data/tasas.json` con `RepositorioTasaJSON` en `persistence/repositorios.py`.
+- Decisión: opción B — archivo propio `data/tasas.json` con `RepositorioTasaJSON`, modelo de registro único.
+- Razón: las tasas son datos operacionales que cambian a diario, no configuración estática como el nombre del negocio. Separarlas evita que `Settings` crezca en responsabilidad más allá de su rol y mantiene el patrón de "cada entidad con su repositorio". Si mañana se quiere historial de tasas, el repositorio ya existe y solo se amplía.

@@ -12,9 +12,11 @@ Responsabilidad: único punto de contacto con disco. `core/` no sabe que existe 
 | `listar() -> list[dict]` | registros |
 | `actualizar(registro: dict) -> None` | — |
 
-## Repositorios (`ProductoRepository`, `VentaRepository`, `GastoRepository`, `MovimientoStockRepository`)
+## Repositorios (`RepositorioProductosJSON`, `RepositorioVentasJSON`, `RepositorioGastosJSON`, `RepositorioMovimientosJSON`, `RepositorioTasaJSON`)
 
 Cada uno envuelve un `JsonStore` y hace la conversión objeto ↔ dict. Aísla a `core/` del formato de almacenamiento — esto es lo que permite migrar a SQLite en v2 sin tocar `core/`.
+
+`RepositorioTasaJSON` es especial: gestiona un **registro único** (la tasa vigente), no una lista de entidades. `guardar` sobrescribe el único registro; `obtener_actual` lo devuelve o `None`.
 
 ## Archivos de datos (nombres exactos, no inventar otros)
 
@@ -24,6 +26,7 @@ Cada uno envuelve un `JsonStore` y hace la conversión objeto ↔ dict. Aísla a
 | `VentaRepository` | `data/ventas.json` |
 | `GastoRepository` | `data/gastos.json` |
 | `MovimientoStockRepository` | `data/movimientos_stock.json` |
+| `RepositorioTasaJSON` | `data/tasas.json` (registro único) |
 
 Cada archivo contiene una lista JSON de objetos (`[]` si está vacío). Si el archivo no existe al leer, `JsonStore` lo crea vacío — no lanza error.
 
