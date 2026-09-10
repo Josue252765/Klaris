@@ -76,6 +76,7 @@ def _producto(
         stock_actual=stock,
         stock_minimo=stock_minimo,
         unidad_medida="kg",
+        codigo="ALI-0001",
     )
 
 
@@ -305,6 +306,24 @@ def test_cerrar_venta_bs_pago_insuficiente_lanza() -> None:
         gestor.cerrar_venta(
             carrito, Moneda.USD, "efectivo_bs",
             moneda_pago=Moneda.BS, monto_recibido_bs=Decimal("100"),
+        )
+
+
+def test_cerrar_venta_bs_monto_recibido_none_lanza() -> None:
+    repo_prod = RepoProductosMemoria()
+    repo_mov = RepoMovimientosMemoria()
+    repo_ventas = RepoVentasMemoria()
+    repo_tasa = RepoTasaMemoria(_tasa_diaria_42())
+    inventario = GestorInventario(repo_prod, repo_mov)
+    gestor = GestorVentas(inventario, repo_prod, repo_ventas, repo_tasa)
+    producto = _producto(costo="2.50", margen="30", stock=10)
+    repo_prod.guardar(producto)
+    carrito = Carrito()
+    carrito.agregar_item(producto, 1)
+    with pytest.raises(ValorInvalidoError):
+        gestor.cerrar_venta(
+            carrito, Moneda.USD, "efectivo_bs",
+            moneda_pago=Moneda.BS, monto_recibido_bs=None,
         )
 
 

@@ -17,6 +17,7 @@ from cli.helpers import (
     pedir_metodo_pago,
     pedir_moneda,
     pedir_monto_recibido,
+    seleccionar_producto,
 )
 from utils.excepciones import KlarisError, ValorInvalidoError
 from utils.formatos import formatear_moneda
@@ -61,7 +62,7 @@ def accion_listar_productos(gestor: GestorProductos) -> None:
         print("No hay productos.")
         return
     for p in productos:
-        print(f"  [{p.id[:8]}] {p.nombre} | {p.categoria} | "
+        print(f"  [{p.codigo}] {p.nombre} | {p.categoria} | "
               f"costo {formatear_moneda(p.costo_unitario, Moneda.USD)} | "
               f"stock {p.stock_actual}/{p.stock_minimo} {p.unidad_medida}")
 
@@ -75,7 +76,7 @@ def accion_buscar_producto(gestor: GestorProductos) -> None:
             print("Sin coincidencias.")
             return
         for p in resultados:
-            print(f"  [{p.id[:8]}] {p.nombre} | stock {p.stock_actual}")
+            print(f"  [{p.codigo}] {p.nombre} | stock {p.stock_actual}")
     except KlarisError as e:
         print(f"Error: {e}")
 
@@ -83,23 +84,24 @@ def accion_buscar_producto(gestor: GestorProductos) -> None:
 def accion_editar_producto(gestor: GestorProductos) -> None:
     """Edita campos de un producto; Enter = mantener valor actual."""
     try:
-        id_producto = input("ID del producto: ").strip()
-        producto = gestor.obtener(id_producto)
+        producto = seleccionar_producto(gestor)
+        if producto is None:
+            return
         print(f"Editando: {producto.nombre}")
         campos: dict[str, object] = {}
+        costo_moneda = Moneda.USD
         nuevo = input(f"Nombre ({producto.nombre}): ").strip()
         if nuevo:
             campos["nombre"] = nuevo
         nuevo_costo = input(f"Costo unitario ({producto.costo_unitario}): ").strip()
         if nuevo_costo:
-            moneda_costo = pedir_moneda("Moneda del nuevo costo")
+            costo_moneda = pedir_moneda("Moneda del nuevo costo")
             campos["costo_unitario"] = Decimal(nuevo_costo)
-            campos["costo_moneda"] = moneda_costo
         nuevo_stock = input(f"Stock actual ({producto.stock_actual}): ").strip()
         if nuevo_stock:
             campos["stock_actual"] = int(nuevo_stock)
         if campos:
-            gestor.actualizar(id_producto, **campos)
+            gestor.actualizar(producto.id, costo_moneda=costo_moneda, **campos)
             print("OK: producto actualizado.")
         else:
             print("Sin cambios.")
@@ -110,37 +112,49 @@ def accion_editar_producto(gestor: GestorProductos) -> None:
 # --- Inventario ---
 
 
-def accion_entrada_inventario(gestor: GestorInventario) -> None:
+def accion_entrada_inventario(
+    gestor_inventario: GestorInventario, gestor_productos: GestorProductos
+) -> None:
     """Registra una entrada de stock pidiendo datos por teclado."""
     try:
-        id_producto = input("ID del producto: ").strip()
+        producto = seleccionar_producto(gestor_productos)
+        if producto is None:
+            return
         cantidad = pedir_int("Cantidad")
         motivo = input("Motivo: ").strip()
-        movimiento = gestor.registrar_entrada(id_producto, cantidad, motivo)
+        movimiento = gestor_inventario.registrar_entrada(producto.id, cantidad, motivo)
         print(f"OK: entrada registrada (+{movimiento.cantidad})")
     except (KlarisError, ValueError) as e:
         print(f"Error: {e}")
 
 
-def accion_salida_inventario(gestor: GestorInventario) -> None:
+def accion_salida_inventario(
+    gestor_inventario: GestorInventario, gestor_productos: GestorProductos
+) -> None:
     """Registra una salida de stock pidiendo datos por teclado."""
     try:
-        id_producto = input("ID del producto: ").strip()
+        producto = seleccionar_producto(gestor_productos)
+        if producto is None:
+            return
         cantidad = pedir_int("Cantidad")
         motivo = input("Motivo: ").strip()
-        movimiento = gestor.registrar_salida(id_producto, cantidad, motivo)
+        movimiento = gestor_inventario.registrar_salida(producto.id, cantidad, motivo)
         print(f"OK: salida registrada (-{movimiento.cantidad})")
     except (KlarisError, ValueError) as e:
         print(f"Error: {e}")
 
 
-def accion_ajustar_stock(gestor: GestorInventario) -> None:
+def accion_ajustar_stock(
+    gestor_inventario: GestorInventario, gestor_productos: GestorProductos
+) -> None:
     """Ajusta el stock a un valor exacto pidiendo datos por teclado."""
     try:
-        id_producto = input("ID del producto: ").strip()
+        producto = seleccionar_producto(gestor_productos)
+        if producto is None:
+            return
         nueva_cantidad = pedir_int("Nueva cantidad")
         motivo = input("Motivo: ").strip()
-        movimiento = gestor.ajustar_stock(id_producto, nueva_cantidad, motivo)
+        movimiento = gestor_inventario.ajustar_stock(producto.id, nueva_cantidad, motivo)
         print(f"OK: stock ajustado a {movimiento.cantidad}")
     except (KlarisError, ValueError) as e:
         print(f"Error: {e}")

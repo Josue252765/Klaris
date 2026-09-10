@@ -67,7 +67,7 @@ def main() -> None:
         if opcion == "1":
             _menu_productos(gestor_productos)
         elif opcion == "2":
-            _menu_inventario(gestor_inventario)
+            _menu_inventario(gestor_inventario, gestor_productos)
         elif opcion == "3":
             accion_vender(gestor_ventas, gestor_productos)
         elif opcion == "4":
@@ -97,16 +97,18 @@ def _menu_productos(gestor_productos: GestorProductos) -> None:
         accion_editar_producto(gestor_productos)
 
 
-def _menu_inventario(gestor_inventario: GestorInventario) -> None:
+def _menu_inventario(
+    gestor_inventario: GestorInventario, gestor_productos: GestorProductos
+) -> None:
     """Submenú de inventario: entrada, salida, ajustar, stock bajo."""
     print("  a) Entrada  b) Salida  c) Ajustar  d) Stock bajo")
     sub = input("  Opción: ").strip().lower()
     if sub == "a":
-        accion_entrada_inventario(gestor_inventario)
+        accion_entrada_inventario(gestor_inventario, gestor_productos)
     elif sub == "b":
-        accion_salida_inventario(gestor_inventario)
+        accion_salida_inventario(gestor_inventario, gestor_productos)
     elif sub == "c":
-        accion_ajustar_stock(gestor_inventario)
+        accion_ajustar_stock(gestor_inventario, gestor_productos)
     elif sub == "d":
         accion_ver_stock_bajo(gestor_inventario)
 

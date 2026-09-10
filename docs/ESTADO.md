@@ -4,8 +4,8 @@
 
 ## Fase actual
 
-- **Completadas:** setup, moneda (enum + TasaCambio), producto, precios, inventario, ventas, gastos, persistencia (json_store + 5 repositorios), config/settings, utils/formatos, utils/validadores — 117/117 tests pasando.
-- **Pendiente del MVP:** main.py.
+- **Completadas:** setup, moneda (enum + TasaCambio), producto (con código autogenerado), precios, inventario, ventas, gastos, persistencia (json_store + 5 repositorios), config/settings, utils/formatos, utils/validadores, cli (acciones + helpers + main interactivo) — 161/161 tests pasando.
+- **Pendiente del MVP:** Ninguno.
 - **Fuera de alcance (v2, no tocar):** empleados, auth, SQLite, reportes, web.
 
 ## Últimas sesiones
@@ -20,6 +20,7 @@ _(el agente agrega una línea nueva al final de cada sesión, formato: fecha —
 - 2026-09-09 — Implementada persistencia: json_store.py (escritura atómica) + repositorios.py (4 repositorios JSON con serialización Decimal/datetime/enum). 80/80 pasando.
 - 2026-09-09 — Implementados config/settings.py (Settings central), utils/formatos.py (moneda+fechas), utils/validadores.py (texto/montos/opciones) con tests. 106/106 pasando.
 - 2026-09-09 — Implementado TasaCambio en core/moneda.py + RepositorioTasaJSON en persistence/repositorios.py + ruta_tasas() en config/settings.py con tests. 117/117 pasando. Decisión registrada en DECISIONES.md (archivo propio sobre ampliar Settings).
+- 2026-09-10 — Integración completa del código de producto en inventario, corrección de costo_moneda en edición y validación de monto_recibido_bs obligatorio en pagos en BS. 161/161 pasando.
 
 ## Decisiones pendientes / dudas abiertas
 
