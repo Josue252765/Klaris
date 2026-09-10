@@ -5,10 +5,12 @@
 ## Fase actual
 
 - **Completadas:** MVP Fases 0-6 completo (setup, moneda, producto con código autogenerado, precios, inventario, ventas, gastos, persistencia, config, utils, tasas y CLI) - 161/161 tests pasando.
+- **Completadas:** Fase 7 — Reportes y cierre de caja (core/reportes.py, cli/acciones.py, main.py) - 177/177 tests pasando.
 - **Pendiente del MVP:** Ninguno.
 - **Pendientes no críticos (deuda técnica / documentación):**
   - Tests complementarios en `core/`, `utils/` y `config/`.
-  - Sincronización de specs en `docs/modulos/` desfasadas tras la integración de tasas, autogeneración de código y CLI.
+  - (resuelto) Sincronización de specs en `docs/modulos/` completada.
+  - Agregar spec `docs/modulos/reportes.md` para la Fase 7.
 - **Fuera de alcance (v2, no tocar):** empleados, auth, SQLite, reportes, web.
 
 ## Últimas sesiones
@@ -24,6 +26,8 @@ _(el agente agrega una línea nueva al final de cada sesión, formato: fecha - q
 - 2026-09-09 - Implementados config/settings.py (Settings central), utils/formatos.py (moneda+fechas), utils/validadores.py (texto/montos/opciones) con tests. 106/106 pasando.
 - 2026-09-09 - Implementado TasaCambio en core/moneda.py + RepositorioTasaJSON en persistence/repositorios.py + ruta_tasas() en config/settings.py con tests. 117/117 pasando. Decisión registrada en DECISIONES.md (archivo propio sobre ampliar Settings).
 - 2026-09-10 - Corrección de bugs críticos de MVP (menú inventario, edición de costo de producto, validación de pago en BS) resueltos en commit afa21ba. 161/161 tests pasando.
+- 2026-09-10 - Sincronización de specs docs/modulos/ (5 archivos actualizados). Sin cambios de código.
+- 2026-09-10 - Fase 7: core/reportes.py (GeneradorReportes, CierreCaja, ProductoRanking), tests/core/test_reportes.py (16 tests), integración CLI y main.py. 177/177 tests pasando.
 
 ## Decisiones pendientes / dudas abiertas
 

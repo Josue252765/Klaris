@@ -6,6 +6,7 @@ from cli.acciones import (
     accion_actualizar_tasa,
     accion_ajustar_stock,
     accion_buscar_producto,
+    accion_cierre_de_caja,
     accion_crear_producto,
     accion_editar_producto,
     accion_entrada_inventario,
@@ -14,6 +15,7 @@ from cli.acciones import (
     accion_registrar_gasto,
     accion_reporte_dia,
     accion_salida_inventario,
+    accion_top_productos,
     accion_ver_stock_bajo,
     accion_ver_tasa,
     accion_vender,
@@ -22,6 +24,7 @@ from config.settings import Settings
 from core.gastos import GestorGastos
 from core.inventario import GestorInventario
 from core.producto import GestorProductos
+from core.reportes import GeneradorReportes
 from core.tasas import GestorTasas
 from core.ventas import GestorVentas
 from persistence.repositorios import (
@@ -40,7 +43,8 @@ _MENU = """\
 4. Gastos
 5. Tasas de cambio
 6. Reporte del día
-7. Salir
+7. Reportes y cierre de caja
+8. Salir
 """
 
 
@@ -60,6 +64,7 @@ def main() -> None:
         gestor_inventario, repo_productos, repo_ventas, repo_tasas
     )
     gestor_gastos = GestorGastos(repo_gastos, repo_tasas)
+    generador_reportes = GeneradorReportes(gestor_ventas, gestor_gastos, repo_tasas)
 
     while True:
         print(_MENU)
@@ -77,6 +82,8 @@ def main() -> None:
         elif opcion == "6":
             accion_reporte_dia(gestor_ventas, gestor_gastos)
         elif opcion == "7":
+            _menu_reportes(generador_reportes, repo_productos)
+        elif opcion == "8":
             print("Hasta luego.")
             break
         else:
@@ -131,6 +138,16 @@ def _menu_tasas(gestor_tasas: GestorTasas) -> None:
         accion_actualizar_tasa(gestor_tasas)
     elif sub == "b":
         accion_ver_tasa(gestor_tasas)
+
+
+def _menu_reportes(generador: GeneradorReportes, repo_productos) -> None:
+    """Submenú de reportes: cierre de caja, top productos."""
+    print("  a) Cierre de caja  b) Top productos vendidos")
+    sub = input("  Opción: ").strip().lower()
+    if sub == "a":
+        accion_cierre_de_caja(generador)
+    elif sub == "b":
+        accion_top_productos(generador, repo_productos)
 
 
 if __name__ == "__main__":
