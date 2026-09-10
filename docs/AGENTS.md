@@ -21,9 +21,9 @@ La especificación técnica está en `docs/modulos/*.md` (un archivo por módulo
 
 ## Flujo de trabajo esperado
 
-1. Trabaja **un módulo a la vez**, en el orden del roadmap (siguiente pendiente: Fase 5 — ventas).
-2. Cada módulo nuevo en `core/` viene con su archivo espejo en `tests/core/` en el mismo commit/tarea.
-3. Antes de dar por cerrada una tarea: correr `pytest` y confirmar que todo pasa (meta: 100%, como el estado previo 39/39).
+1. Trabaja **un módulo a la vez**, en el orden del roadmap (MVP fases 0-6 completo; módulos `core/tasas.py` y `cli/` ya existentes).
+2. Cada módulo nuevo en `core/` o `cli/` viene con su archivo espejo en `tests/` en el mismo commit/tarea.
+3. Antes de dar por cerrada una tarea: correr `pytest` y confirmar que todo pasa (meta: 100%, como el estado actual 161/161).
 4. Si una decisión de diseño no está cubierta por la spec, pregunta — no la inventes silenciosamente.
 5. Explica en español, en el chat/CLI, qué se hizo y por qué, en términos simples (el autor del proyecto es principiante en programación).
 

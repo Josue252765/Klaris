@@ -1,8 +1,8 @@
-# Roadmap a futuro — Klaris
+# Roadmap a futuro - Klaris
 
 > Este documento es visión a futuro. No se construye hasta terminar el MVP actual (moneda, producto, precios, inventario, ventas, gastos, persistencia). El orden de construcción sigue siendo el de `docs/ESTADO.md`.
 
-Cada módulo se ubicaría dentro de la estructura actual del repo (`core/`, `persistence/`, `config/`, `utils/`). No se crea `data/`, `services/` ni `ui/` como carpetas separadas — la lógica vive en `core/`, la persistencia en `persistence/`.
+Cada módulo se ubicaría dentro de la estructura actual del repo (`core/`, `persistence/`, `config/`, `utils/`). No se crea `data/`, `services/` ni `ui/` como carpetas separadas - la lógica vive en `core/`, la persistencia en `persistence/`.
 
 ## Módulos previstos
 
@@ -48,5 +48,5 @@ Cada módulo se ubicaría dentro de la estructura actual del repo (`core/`, `per
 
 ### Licencias (protección del software)
 - **Archivo:** `core/licencias.py`
-- **Responsabilidad:** validación de licencia de uso (clave única por instalación), bloqueo de operación si la licencia expira o es inválida. No implementa DRM complejo — solo verificación básica offline.
+- **Responsabilidad:** validación de licencia de uso (clave única por instalación), bloqueo de operación si la licencia expira o es inválida. No implementa DRM complejo - solo verificación básica offline.
 - **Dependencias:** `persistence/repositorios.py`, `utils/excepciones.py`.

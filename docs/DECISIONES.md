@@ -42,3 +42,8 @@
 - Contexto: había dos opciones para persistir `TasaCambio`: (A) ampliar `config/settings.py` con los atributos de tasa, o (B) crear `data/tasas.json` con `RepositorioTasaJSON` en `persistence/repositorios.py`.
 - Decisión: opción B — archivo propio `data/tasas.json` con `RepositorioTasaJSON`, modelo de registro único.
 - Razón: las tasas son datos operacionales que cambian a diario, no configuración estática como el nombre del negocio. Separarlas evita que `Settings` crezca en responsabilidad más allá de su rol y mantiene el patrón de "cada entidad con su repositorio". Si mañana se quiere historial de tasas, el repositorio ya existe y solo se amplía.
+
+### [2026-09-09] Código de producto autogenerado (PREFIJO-NNNN)
+- Contexto: hacía falta una forma corta y única de identificar/buscar productos sin depender del UUID ni del nombre libre (que admite mayúsculas, errores de tipeo y duplicados).
+- Decisión: `Producto.codigo` se autogenera en `GestorProductos.crear()` a partir de las primeras 3 letras de la categoría (mayúsculas, sin acentos ni espacios) + número secuencial zero-padded a 4 dígitos. El usuario nunca lo escribe.
+- Razón: evitar error humano al tipearlo y garantizar unicidad, y dejar preparado el terreno para un lector de código de barras futuro (PATRÓN corto y estable).
