@@ -52,6 +52,7 @@ def _producto(stock: int = 10, stock_minimo: int = 2) -> Producto:
         stock_actual=stock,
         stock_minimo=stock_minimo,
         unidad_medida="kg",
+        codigo="ALI-0001",
     )
 
 

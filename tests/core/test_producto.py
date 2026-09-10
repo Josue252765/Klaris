@@ -26,6 +26,7 @@ def _producto_valido(**sobrescribir: object) -> Producto:
         "stock_actual": 10,
         "stock_minimo": 2,
         "unidad_medida": "kg",
+        "codigo": "ALI-0001",
     }
     datos.update(sobrescribir)
     return Producto(**datos)
@@ -41,6 +42,7 @@ def test_creacion_con_id_uuid_valido() -> None:
         stock_actual=5,
         stock_minimo=1,
         unidad_medida="kg",
+        codigo="ALI-0002",
     )
     UUID(producto.id)
     assert producto.id == "b04ab05a-0000-4000-8000-000000000002"

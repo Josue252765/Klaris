@@ -1,20 +1,21 @@
 """Funciones helper de la CLI: conversión de input y utilidades de impresión."""
 
+import re
 from decimal import Decimal
 
 from core.moneda import Moneda
 from core.producto import GestorProductos
 from core.ventas import Carrito, METODOS_PAGO_VALIDOS
-from utils.excepciones import KlarisError, ValorInvalidoError
+from utils.excepciones import KlarisError, ProductoNoEncontradoError, ValorInvalidoError
 from utils.formatos import formatear_fecha_hora, formatear_moneda
 
 
 def pedir_moneda(prompt: str) -> Moneda:
-    """Pide USD o BS por teclado; lanza ValorInvalidoError si es inválido."""
-    opcion = input(f"{prompt} (USD/BS): ").strip().upper()
-    if opcion == "USD":
+    """Pide USD o BS por teclado, tolerando texto extra; lanza ValorInvalidoError si no hay."""
+    texto = input(f"{prompt} (USD/BS): ").lower()
+    if re.search(r"\busd\b", texto):
         return Moneda.USD
-    if opcion == "BS":
+    if re.search(r"\bbs\b", texto):
         return Moneda.BS
     raise ValorInvalidoError("Moneda inválida. Use USD o BS.")
 
@@ -33,17 +34,49 @@ def armar_carrito(gestor_productos: GestorProductos) -> Carrito:
     """Construye un carrito pidiendo productos hasta que el usuario diga 'listo'."""
     carrito = Carrito()
     while True:
-        entrada = input("Producto (id) o 'listo': ").strip()
+        entrada = input("Producto (nombre/código) o 'listo': ").strip()
         if entrada.lower() == "listo":
             break
         try:
-            producto = gestor_productos.obtener(entrada)
+            producto = _buscar_producto(gestor_productos, entrada)
+            if producto is None:
+                continue
             cantidad = int(input("Cantidad: "))
             carrito.agregar_item(producto, cantidad)
             print(f"  +{cantidad} {producto.nombre} (total: {carrito.total()})")
         except (KlarisError, ValueError) as e:
             print(f"  Error: {e}")
     return carrito
+
+
+def seleccionar_producto(gestor: GestorProductos):
+    """Pide un texto y resuelve un producto por código o nombre."""
+    texto = input("Producto (nombre/código): ").strip()
+    return _buscar_producto(gestor, texto)
+
+
+def _buscar_producto(gestor: GestorProductos, texto: str):
+    """Resuelve un producto por código exacto o búsqueda por nombre."""
+    try:
+        return gestor.obtener_por_codigo(texto)
+    except ProductoNoEncontradoError:
+        pass
+    resultados = gestor.buscar_por_nombre(texto)
+    if not resultados:
+        print("Producto no encontrado.")
+        return None
+    if len(resultados) == 1:
+        return resultados[0]
+    for i, p in enumerate(resultados, start=1):
+        print(f"  {i}. [{p.codigo}] {p.nombre} (stock {p.stock_actual})")
+    numero = input("Seleccione número: ").strip()
+    try:
+        indice = int(numero)
+    except ValueError:
+        return None
+    if 1 <= indice <= len(resultados):
+        return resultados[indice - 1]
+    return None
 
 
 def pedir_metodo_pago() -> str:

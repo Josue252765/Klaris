@@ -22,16 +22,7 @@ def test_cli_sesion_completa(capsys, monkeypatch, tmp_path) -> None:
         ),
     )
 
-    holder = {"id": None}
-    real_print = builtins.print
-
-    def fake_print(*args, **kwargs):
-        mensaje = " ".join(str(a) for a in args)
-        if "producto creado (id=" in mensaje:
-            holder["id"] = mensaje.split("id=")[1].split(")")[0]
-        real_print(*args, **kwargs)
-
-    marcador = object()
+    marcador = "NOMBRE_PRODUCTO"
     cola = [
         "1", "b",
         "Aceite", "Alimentos", "USD", "4.00", "30", "10", "2", "litro",
@@ -46,10 +37,9 @@ def test_cli_sesion_completa(capsys, monkeypatch, tmp_path) -> None:
     def fake_input(prompt=""):
         valor = cola.pop(0)
         if valor is marcador:
-            return holder["id"]
+            return "Aceite"
         return valor
 
-    monkeypatch.setattr(builtins, "print", fake_print)
     monkeypatch.setattr(builtins, "input", fake_input)
 
     main_mod.main()

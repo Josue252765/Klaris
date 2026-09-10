@@ -1,5 +1,6 @@
 """Entidad Producto y su gestor de CRUD, ambos sin I/O (repositorio inyectado)."""
 
+import unicodedata
 from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import Protocol
@@ -25,6 +26,7 @@ class Producto:
     stock_actual: int
     stock_minimo: int
     unidad_medida: str
+    codigo: str
     activo: bool = True
 
     def __post_init__(self) -> None:
@@ -37,6 +39,7 @@ class Producto:
         self._validar_entero_no_negativo(self.stock_actual, "stock_actual")
         self._validar_entero_no_negativo(self.stock_minimo, "stock_minimo")
         self._validar_unidad_medida(self.unidad_medida)
+        self._validar_codigo(self.codigo)
 
     def _validar_id(self, valor: str) -> None:
         if not isinstance(valor, str) or not valor:
@@ -72,6 +75,10 @@ class Producto:
             raise ValorInvalidoError("La unidad de medida no puede estar vacía.")
         if len(valor) > 20:
             raise ValorInvalidoError("La unidad de medida no puede superar los 20 caracteres.")
+
+    def _validar_codigo(self, valor: str) -> None:
+        if not isinstance(valor, str) or not valor.strip():
+            raise ValorInvalidoError("El código no puede estar vacío.")
 
 
 class RepositorioProductos(Protocol):
@@ -119,6 +126,7 @@ class GestorProductos:
             stock_actual=stock_inicial,
             stock_minimo=stock_minimo,
             unidad_medida=unidad_medida,
+            codigo=self._generar_codigo(categoria),
         )
         self._repositorio.guardar(producto)
         return producto
@@ -129,6 +137,16 @@ class GestorProductos:
         if producto is None:
             raise ProductoNoEncontradoError(f"No existe un producto con id {id}.")
         return producto
+
+    def obtener_por_codigo(self, codigo: str) -> Producto:
+        """Devuelve un producto por código; lanza ProductoNoEncontradoError si falta."""
+        codigo_norm = codigo.strip().upper()
+        for producto in self._repositorio.listar():
+            if producto.codigo == codigo_norm:
+                return producto
+        raise ProductoNoEncontradoError(
+            f"No existe un producto con código {codigo}."
+        )
 
     def actualizar(
         self, id: str, costo_moneda: Moneda = Moneda.USD, **campos: object
@@ -181,3 +199,28 @@ class GestorProductos:
                 "No hay tasa referencial guardada para convertir BS a USD."
             )
         return tasa.convertir(costo, Moneda.BS, Moneda.USD, "referencial")
+
+    def _generar_codigo(self, categoria: str) -> str:
+        """Genera un código único PREFIJO-NNNN a partir de la categoría."""
+        prefijo = self._prefijo_categoria(categoria)
+        return f"{prefijo}-{self._siguiente_secuencia(prefijo)}"
+
+    def _prefijo_categoria(self, categoria: str) -> str:
+        """Devuelve las primeras 3 letras de la categoría en mayúsculas, sin acentos ni espacios."""
+        normalizada = unicodedata.normalize("NFKD", categoria)
+        sin_diacriticos = "".join(
+            c for c in normalizada if not unicodedata.combining(c)
+        )
+        alfanumerico = "".join(c for c in sin_diacriticos if c.isalnum())
+        return alfanumerico[:3].upper()
+
+    def _siguiente_secuencia(self, prefijo: str) -> str:
+        """Devuelve el número secuencial siguiente para un prefijo, zero-padded a 4 dígitos."""
+        numeros = []
+        for producto in self._repositorio.listar():
+            if producto.codigo.startswith(f"{prefijo}-"):
+                sufijo = producto.codigo.split("-", 1)[1]
+                if sufijo.isdigit():
+                    numeros.append(int(sufijo))
+        siguiente = max(numeros) + 1 if numeros else 1
+        return f"{siguiente:04d}"

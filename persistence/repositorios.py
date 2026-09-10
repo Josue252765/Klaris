@@ -45,6 +45,7 @@ class RepositorioProductosJSON:
             "stock_actual": p.stock_actual,
             "stock_minimo": p.stock_minimo,
             "unidad_medida": p.unidad_medida,
+            "codigo": p.codigo,
             "activo": p.activo,
         }
 
@@ -58,6 +59,7 @@ class RepositorioProductosJSON:
             stock_actual=r["stock_actual"],
             stock_minimo=r["stock_minimo"],
             unidad_medida=r["unidad_medida"],
+            codigo=r["codigo"],
             activo=r["activo"],
         )
 

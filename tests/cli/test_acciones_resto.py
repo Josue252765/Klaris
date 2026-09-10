@@ -33,7 +33,7 @@ def test_vender_feliz(capsys, monkeypatch) -> None:
     inventario = GestorInventario(repo_prod, repo_mov)
     gestor = GestorVentas(inventario, repo_prod, repo_ventas, repo_tasa)
     gestor_prod = GestorProductos(repo_prod, repo_tasa)
-    inputs = iter([p.id, "2", "listo", "efectivo_usd", "USD"])
+    inputs = iter(["Harina", "2", "listo", "efectivo_usd", "USD"])
     monkeypatch.setattr("builtins.input", lambda p="": next(inputs))
     accion_vender(gestor, gestor_prod)
     out = capsys.readouterr().out
