@@ -11,6 +11,7 @@ from cli.acciones import (
     accion_crear_producto,
     accion_editar_producto,
     accion_entrada_inventario,
+    accion_historial_movimientos,
     accion_listar_gastos,
     accion_listar_productos,
     accion_registrar_abono,
@@ -130,8 +131,8 @@ def _menu_productos(gestor_productos: GestorProductos) -> None:
 def _menu_inventario(
     gestor_inventario: GestorInventario, gestor_productos: GestorProductos
 ) -> None:
-    """Submenú de inventario: entrada, salida, ajustar, stock bajo."""
-    print("  a) Entrada  b) Salida  c) Ajustar  d) Stock bajo")
+    """Submenú de inventario: entrada, salida, ajustar, stock bajo, historial."""
+    print("  a) Entrada  b) Salida  c) Ajustar  d) Stock bajo  e) Historial")
     sub = input("  Opción: ").strip().lower()
     if sub == "a":
         accion_entrada_inventario(gestor_inventario, gestor_productos)
@@ -140,7 +141,9 @@ def _menu_inventario(
     elif sub == "c":
         accion_ajustar_stock(gestor_inventario, gestor_productos)
     elif sub == "d":
-        accion_ver_stock_bajo(gestor_inventario)
+        accion_ver_stock_bajo(gestor_inventario, gestor_productos)
+    elif sub == "e":
+        accion_historial_movimientos(gestor_inventario, gestor_productos)
 
 
 def _menu_ventas(

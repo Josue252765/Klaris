@@ -52,3 +52,8 @@
 - Contexto: la tarea permitía el método en `core/ventas.py` o `core/devoluciones.py`.
 - Decisión: `GestorDevoluciones.anular_venta` orquesta validación, reingreso de stock y persistencia de `AnulacionVenta`. `GestorVentas` solo expone `obtener` y `marcar_anulada`.
 - Razón: anular no es cerrar una venta; mezclarlo en `GestorVentas` acoplaría ventas a un repositorio de anulaciones. El flag `anulada` sí pertenece a `Venta` porque los reportes y el listado lo leen ahí.
+
+### [2026-09-10] stock_minimo como int por producto y alerta híbrida en salida
+- Contexto: la Fase 10 planteó stock_minimo y alertas automáticas. El campo `stock_minimo` ya existía en `Producto` como `int` (unidades físicas contables). La alerta automática en salidas debía notificarse sin romper la regla de cero I/O en `core/`.
+- Decisión: mantener `stock_minimo: int` (coherente con `stock_actual: int`). La alerta se implementa de forma híbrida: `GestorInventario.verificar_stock_bajo` provee el método de verificación en `core/`, y la capa CLI (`accion_salida_inventario`) evalúa y muestra la notificación al usuario si la salida deja el producto en stock bajo.
+- Razón: cambiar `stock_minimo` a `Decimal` crearía inconsistencia con el tipo entero del inventario físico. La separación de responsabilidades respeta "cero I/O en core/" mientras garantiza visibilidad inmediata de stock bajo tras una salida.

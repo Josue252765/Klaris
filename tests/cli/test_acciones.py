@@ -4,16 +4,17 @@ from decimal import Decimal
 from uuid import uuid4
 
 from cli.acciones import (
+    accion_ajustar_stock,
     accion_buscar_producto,
     accion_crear_producto,
     accion_editar_producto,
     accion_entrada_inventario,
+    accion_historial_movimientos,
     accion_listar_productos,
     accion_salida_inventario,
-    accion_ajustar_stock,
     accion_ver_stock_bajo,
 )
-from core.inventario import GestorInventario
+from core.inventario import GestorInventario, MovimientoStock
 from core.producto import GestorProductos, Producto
 from tests.cli.conftest import producto, RepoProductosMemoria, RepoMovimientosMemoria
 
@@ -190,8 +191,45 @@ def test_ajustar_stock_feliz(capsys, monkeypatch) -> None:
     assert repo_prod.obtener(p.id).stock_actual == 20
 
 
+def test_salida_inventario_alerta_stock_bajo(capsys, monkeypatch) -> None:
+    repo_prod = RepoProductosMemoria()
+    repo_mov = RepoMovimientosMemoria()
+    p = producto(stock=3)  # stock_minimo es 2
+    repo_prod.guardar(p)
+    monkeypatch.setattr("builtins.input", lambda prompt="": {
+        "Producto (nombre/código): ": "Harina", "Cantidad: ": "2", "Motivo: ": "venta",
+    }[prompt])
+    accion_salida_inventario(
+        GestorInventario(repo_prod, repo_mov), GestorProductos(repo_prod)
+    )
+    out = capsys.readouterr().out
+    assert "OK: salida" in out
+    assert "ALERTA:" in out
+    assert "(1/2)" in out
+
+
 def test_ver_stock_bajo(capsys) -> None:
     repo_prod = RepoProductosMemoria()
     repo_prod.guardar(producto(stock=1))
-    accion_ver_stock_bajo(GestorInventario(repo_prod, RepoMovimientosMemoria()))
+    accion_ver_stock_bajo(
+        GestorInventario(repo_prod, RepoMovimientosMemoria()),
+        GestorProductos(repo_prod),
+    )
     assert "Harina" in capsys.readouterr().out
+
+
+def test_historial_movimientos_feliz(capsys, monkeypatch) -> None:
+    repo_prod = RepoProductosMemoria()
+    repo_mov = RepoMovimientosMemoria()
+    p = producto()
+    repo_prod.guardar(p)
+    repo_mov.guardar(MovimientoStock(p.id, "entrada", 10, "compra inicial"))
+    inputs = iter(["", "", ""])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(inputs))
+    accion_historial_movimientos(
+        GestorInventario(repo_prod, repo_mov), GestorProductos(repo_prod)
+    )
+    out = capsys.readouterr().out
+    assert "HISTORIAL DE MOVIMIENTOS" in out
+    assert "Harina" in out
+    assert "compra inicial" in out

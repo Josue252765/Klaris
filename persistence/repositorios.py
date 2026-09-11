@@ -76,6 +76,10 @@ class RepositorioMovimientosJSON:
         """Persiste un movimiento como diccionario."""
         self._store.guardar(self._serializar(movimiento))
 
+    def listar(self) -> list[MovimientoStock]:
+        """Devuelve todos los movimientos en orden de registro."""
+        return [self._deserializar(r) for r in self._store.listar()]
+
     def _serializar(self, m: MovimientoStock) -> dict:
         return {
             "producto_id": m.producto_id,

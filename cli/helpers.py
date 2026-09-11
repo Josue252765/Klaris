@@ -38,7 +38,7 @@ def armar_carrito(gestor_productos: GestorProductos) -> Carrito:
         if entrada.lower() == "listo":
             break
         try:
-            producto = _buscar_producto(gestor_productos, entrada)
+            producto = buscar_producto(gestor_productos, entrada)
             if producto is None:
                 continue
             cantidad = int(input("Cantidad: "))
@@ -52,11 +52,11 @@ def armar_carrito(gestor_productos: GestorProductos) -> Carrito:
 def seleccionar_producto(gestor: GestorProductos):
     """Pide un texto y resuelve un producto por código o nombre."""
     texto = input("Producto (nombre/código): ").strip()
-    return _buscar_producto(gestor, texto)
+    return buscar_producto(gestor, texto)
 
 
-def _buscar_producto(gestor: GestorProductos, texto: str):
-    """Resuelve un producto por código exacto o búsqueda por nombre."""
+def buscar_producto(gestor: GestorProductos, texto: str):
+    """Resuelve un producto por código exacto o búsqueda por nombre; None si no hay coincidencia."""
     try:
         return gestor.obtener_por_codigo(texto)
     except ProductoNoEncontradoError:

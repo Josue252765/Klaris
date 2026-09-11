@@ -81,7 +81,11 @@ def test_movimiento_roundtrip_fecha_preservada(tmp_path) -> None:
         fecha=datetime(2026, 9, 9, 12, 0, 0),
     )
     repo.guardar(movimiento)
-    assert len(repo._store.listar()) == 1
+    lista = repo.listar()
+    assert len(lista) == 1
+    assert lista[0].producto_id == "prod-1"
+    assert lista[0].cantidad == 5
+    assert lista[0].fecha == datetime(2026, 9, 9, 12, 0, 0)
 
 
 def test_venta_roundtrip_decimal_y_moneda(tmp_path) -> None:

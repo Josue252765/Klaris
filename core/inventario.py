@@ -1,10 +1,10 @@
-"""Control de stock: entradas, salidas, ajustes y alertas de stock bajo."""
+"""Control de stock: entradas, salidas, ajustes, alertas y auditoría de movimientos."""
 
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal, Protocol
 
-from core.producto import Producto, RepositorioProductos
+from core.producto import GestorProductos, Producto, RepositorioProductos
 from utils.excepciones import (
     ProductoNoEncontradoError,
     StockInsuficienteError,
@@ -27,6 +27,8 @@ class RepositorioMovimientos(Protocol):
     """Contrato de persistencia de movimientos de stock."""
 
     def guardar(self, movimiento: MovimientoStock) -> None: ...
+
+    def listar(self) -> list[MovimientoStock]: ...
 
 
 class GestorInventario:
@@ -78,12 +80,35 @@ class GestorInventario:
         self._productos.actualizar(replace(producto, stock_actual=nueva_cantidad))
         return movimiento
 
-    def productos_stock_bajo(self) -> list[Producto]:
-        """Devuelve los productos cuyo stock actual es menor o igual al mínimo."""
+    def verificar_stock_bajo(self, producto_id: str) -> bool:
+        """True si el stock actual es menor o igual al mínimo; lanza si el producto falta."""
+        producto = self._buscar_producto(producto_id)
+        return producto.stock_actual <= producto.stock_minimo
+
+    def listar_productos_bajo_minimo(
+        self, gestor_productos: GestorProductos
+    ) -> list[Producto]:
+        """Devuelve productos activos con stock actual menor o igual al mínimo."""
         return [
-            p for p in self._productos.listar()
+            p for p in gestor_productos.listar()
             if p.stock_actual <= p.stock_minimo
         ]
+
+    def historial_movimientos(
+        self,
+        producto_id: str | None = None,
+        desde: date | None = None,
+        hasta: date | None = None,
+    ) -> list[MovimientoStock]:
+        """Lista movimientos en orden de registro, filtrando por producto y/o rango de fechas (inclusive)."""
+        movimientos = self._movimientos.listar()
+        if producto_id is not None:
+            movimientos = [m for m in movimientos if m.producto_id == producto_id]
+        if desde is not None:
+            movimientos = [m for m in movimientos if m.fecha.date() >= desde]
+        if hasta is not None:
+            movimientos = [m for m in movimientos if m.fecha.date() <= hasta]
+        return movimientos
 
     def _buscar_producto(self, producto_id: str) -> Producto:
         producto = self._productos.obtener(producto_id)

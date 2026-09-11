@@ -21,7 +21,9 @@ Recibe `productos: RepositorioProductos` y `movimientos: RepositorioMovimientos`
 | `registrar_entrada(producto_id, cantidad, motivo) -> MovimientoStock` | movimiento | `ProductoNoEncontradoError`; `ValorInvalidoError` si cantidad ≤ 0 |
 | `registrar_salida(producto_id, cantidad, motivo) -> MovimientoStock` | movimiento | `ProductoNoEncontradoError`; `ValorInvalidoError` si cantidad ≤ 0; `StockInsuficienteError` si `cantidad > stock_actual` |
 | `ajustar_stock(producto_id, nueva_cantidad, motivo) -> MovimientoStock` | movimiento | `ValorInvalidoError` si `nueva_cantidad < 0`; `ProductoNoEncontradoError` |
-| `productos_stock_bajo() -> list[Producto]` | productos donde `stock_actual <= stock_minimo` | — |
+| `verificar_stock_bajo(producto_id) -> bool` | `True` si `stock_actual <= stock_minimo` | `ProductoNoEncontradoError` |
+| `listar_productos_bajo_minimo(gestor_productos) -> list[Producto]` | productos activos con `stock_actual <= stock_minimo` | — |
+| `historial_movimientos(producto_id=None, desde=None, hasta=None) -> list[MovimientoStock]` | lista de movimientos filtrados por producto y/o rango de fechas | — |
 
 `ajustar_stock` fija el stock al valor exacto indicado — no es una entrada ni salida relativa. El movimiento persiste con `tipo="ajuste"` y `cantidad=nueva_cantidad`.
 
@@ -32,9 +34,10 @@ Todas las operaciones de inventario seleccionan el producto primero con `selecci
 | Acción | Función CLI | Pasos |
 |---|---|---|
 | Entrada de stock | `accion_entrada_inventario` | seleccionar producto → pedir cantidad → pedir motivo → `registrar_entrada` |
-| Salida de stock | `accion_salida_inventario` | seleccionar producto → pedir cantidad → pedir motivo → `registrar_salida` |
+| Salida de stock | `accion_salida_inventario` | seleccionar producto → pedir cantidad → pedir motivo → `registrar_salida` → si stock bajo, muestra ALERTA |
 | Ajuste de stock | `accion_ajustar_stock` | seleccionar producto → pedir nueva cantidad → pedir motivo → `ajustar_stock` |
-| Ver stock bajo | `accion_ver_stock_bajo` | llama a `productos_stock_bajo` y lista `[id[:8]] nombre \| stock_actual/stock_minimo` |
+| Ver stock bajo | `accion_ver_stock_bajo` | llama a `listar_productos_bajo_minimo` y lista `[codigo] nombre \| stock_actual/stock_minimo` |
+| Historial movimientos | `accion_historial_movimientos` | producto opcional → rango fecha opcional → llama a `historial_movimientos` y lista registros |
 
 ## Reglas
 
