@@ -14,6 +14,7 @@ from cli.helpers import (
     pedir_moneda,
     pedir_monto_recibido,
 )
+from core.configuracion import GestorConfiguracion
 from utils.excepciones import KlarisError, ValorInvalidoError
 from utils.formatos import formatear_fecha, formatear_moneda
 
@@ -22,6 +23,8 @@ def accion_vender(
     gestor_ventas: GestorVentas,
     gestor_productos: GestorProductos,
     gestor_clientes: GestorClientes | None = None,
+    *,
+    configuracion: GestorConfiguracion,
 ) -> None:
     """Arma un carrito, pregunta pago, cierra la venta e imprime el ticket."""
     try:
@@ -38,7 +41,8 @@ def accion_vender(
             moneda_pago=moneda_pago, monto_recibido_bs=monto_recibido,
             cliente_id=cliente_id,
         )
-        imprimir_ticket(venta, gestor_productos)
+        conf = configuracion.obtener()
+        imprimir_ticket(venta, gestor_productos, conf)
     except (KlarisError, ValueError, ArithmeticError) as e:
         print(f"Error: {e}")
 

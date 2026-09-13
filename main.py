@@ -27,6 +27,7 @@ from cli.acciones import (
 )
 from config.settings import Settings
 from core.clientes import GestorClientes
+from core.configuracion import GestorConfiguracion
 from core.devoluciones import GestorDevoluciones
 from core.gastos import GestorGastos
 from core.inventario import GestorInventario
@@ -38,6 +39,7 @@ from persistence.repositorios import (
     RepositorioAbonosJSON,
     RepositorioAnulacionesJSON,
     RepositorioClientesJSON,
+    RepositorioConfiguracionJSON,
     RepositorioGastosJSON,
     RepositorioMovimientosJSON,
     RepositorioProductosJSON,
@@ -70,6 +72,9 @@ def main() -> None:
     repo_anulaciones = RepositorioAnulacionesJSON(config.ruta_anulaciones())
     repo_clientes = RepositorioClientesJSON(config.ruta_clientes())
     repo_abonos = RepositorioAbonosJSON(config.ruta_abonos())
+    repo_configuracion = RepositorioConfiguracionJSON(
+        config.directorio_datos / "configuracion_negocio.json"
+    )
 
     gestor_tasas = GestorTasas(repo_tasas)
     gestor_productos = GestorProductos(repo_productos, repo_tasas)
@@ -84,6 +89,7 @@ def main() -> None:
     gestor_clientes = GestorClientes(
         repo_clientes, repo_abonos, gestor_ventas, repo_tasas
     )
+    gestor_configuracion = GestorConfiguracion(repo_configuracion)
     generador_reportes = GeneradorReportes(gestor_ventas, gestor_gastos, repo_tasas)
 
     while True:
@@ -95,7 +101,11 @@ def main() -> None:
             _menu_inventario(gestor_inventario, gestor_productos)
         elif opcion == "3":
             _menu_ventas(
-                gestor_ventas, gestor_productos, gestor_devoluciones, gestor_clientes
+                gestor_ventas,
+                gestor_productos,
+                gestor_devoluciones,
+                gestor_clientes,
+                gestor_configuracion,
             )
         elif opcion == "4":
             _menu_gastos(gestor_gastos)
@@ -151,12 +161,18 @@ def _menu_ventas(
     gestor_productos: GestorProductos,
     gestor_devoluciones: GestorDevoluciones,
     gestor_clientes: GestorClientes,
+    gestor_configuracion: GestorConfiguracion,
 ) -> None:
     """Submenú de ventas: vender, anular."""
     print("  a) Vender  b) Anular venta")
     sub = input("  Opción: ").strip().lower()
     if sub == "a":
-        accion_vender(gestor_ventas, gestor_productos, gestor_clientes)
+        accion_vender(
+            gestor_ventas,
+            gestor_productos,
+            gestor_clientes,
+            configuracion=gestor_configuracion,
+        )
     elif sub == "b":
         accion_anular_venta(gestor_devoluciones, gestor_ventas)
 

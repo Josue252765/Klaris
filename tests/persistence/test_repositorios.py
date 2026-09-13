@@ -2,10 +2,12 @@
 
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
 
+from core.configuracion import ConfiguracionNegocio
 from core.devoluciones import AnulacionVenta
 from core.gastos import CategoriaGasto, Gasto
 from core.inventario import MovimientoStock
@@ -14,6 +16,7 @@ from core.producto import Producto
 from core.ventas import ItemCarrito, Venta
 from persistence.repositorios import (
     RepositorioAnulacionesJSON,
+    RepositorioConfiguracionJSON,
     RepositorioGastosJSON,
     RepositorioMovimientosJSON,
     RepositorioProductosJSON,
@@ -235,3 +238,27 @@ def test_tasa_guardar_sobrescribe_unico_registro(tmp_path) -> None:
     assert recuperada is not None
     assert recuperada.tasa_referencial == Decimal("50")
     assert recuperada.tasa_diaria_fecha == date(2026, 9, 10)
+
+
+def test_roundtrip_configuracion(tmp_path: Path) -> None:
+    repo = RepositorioConfiguracionJSON(tmp_path / "configuracion_negocio.json")
+    config_original = ConfiguracionNegocio(
+        nombre_negocio="Mi Botica",
+        mensaje_pie="Pase buen día",
+        moneda_default=Moneda.USD,
+    )
+    repo.guardar(config_original)
+    config_recuperada = repo.obtener()
+    assert config_recuperada is not None
+    assert config_recuperada.nombre_negocio == "Mi Botica"
+    assert config_recuperada.mensaje_pie == "Pase buen día"
+    assert config_recuperada.moneda_default == Moneda.USD
+    assert repo.obtener() == config_recuperada
+    assert repo.obtener().nombre_negocio == "Mi Botica"
+    assert repo.obtener().mensaje_pie == "Pase buen día"
+    assert repo.obtener().moneda_default == Moneda.USD
+
+
+def test_obtener_none_sin_datos(tmp_path: Path) -> None:
+    repo = RepositorioConfiguracionJSON(tmp_path / "configurar.json")
+    assert repo.obtener() is None

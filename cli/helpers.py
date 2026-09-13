@@ -3,6 +3,7 @@
 import re
 from decimal import Decimal
 
+from core.configuracion import ConfiguracionNegocio
 from core.moneda import Moneda
 from core.producto import GestorProductos
 from core.ventas import Carrito, METODOS_PAGO_VALIDOS
@@ -96,9 +97,14 @@ def pedir_monto_recibido(moneda: Moneda) -> Decimal | None:
     return Decimal(input("Monto recibido (BS): "))
 
 
-def imprimir_ticket(venta, gestor_productos: GestorProductos) -> None:
-    """Imprime el ticket de la venta en texto plano."""
+def imprimir_ticket(
+    venta,
+    gestor_productos: GestorProductos,
+    configuracion: ConfiguracionNegocio,
+) -> None:
+    """Imprime el ticket de la venta en texto plano con encabezado y pie configurables."""
     print("\n--- TICKET ---")
+    print(f"  {configuracion.nombre_negocio}")
     for item in venta.items:
         producto = gestor_productos.obtener(item.producto_id)
         nombre = producto.nombre if producto else "Desconocido"
@@ -112,4 +118,5 @@ def imprimir_ticket(venta, gestor_productos: GestorProductos) -> None:
         print(f"  Vuelto: {formatear_moneda(venta.vuelto_bs, Moneda.BS)}")
     print(f"  Pago: {venta.metodo_pago}")
     print(f"  Fecha: {formatear_fecha_hora(venta.fecha)}")
+    print(f"  {configuracion.mensaje_pie}")
     print("-------------")

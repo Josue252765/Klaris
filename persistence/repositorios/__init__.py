@@ -2,6 +2,7 @@
 
 from persistence.repositorios.repo_anulaciones import RepositorioAnulacionesJSON
 from persistence.repositorios.repo_clientes import RepositorioAbonosJSON, RepositorioClientesJSON
+from persistence.repositorios.repo_configuracion import RepositorioConfiguracionJSON
 from persistence.repositorios.repo_gastos import RepositorioGastosJSON
 from persistence.repositorios.repo_movimientos import RepositorioMovimientosJSON
 from persistence.repositorios.repo_productos import RepositorioProductosJSON
@@ -12,6 +13,7 @@ __all__ = [
     "RepositorioAnulacionesJSON",
     "RepositorioAbonosJSON",
     "RepositorioClientesJSON",
+    "RepositorioConfiguracionJSON",
     "RepositorioGastosJSON",
     "RepositorioMovimientosJSON",
     "RepositorioProductosJSON",

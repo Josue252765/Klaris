@@ -12,6 +12,7 @@ from cli.acciones import (
     accion_ver_tasa,
     accion_vender,
 )
+from core.configuracion import ConfiguracionNegocio, GestorConfiguracion
 from core.devoluciones import GestorDevoluciones
 from core.gastos import CategoriaGasto, Gasto, GestorGastos
 from core.inventario import GestorInventario
@@ -33,6 +34,17 @@ class RepoAnulacionesMemoria:
         return list(self._items)
 
 
+class RepoConfiguracionMemoria:
+    def __init__(self) -> None:
+        self._configuracion: ConfiguracionNegocio | None = None
+
+    def obtener(self) -> ConfiguracionNegocio | None:
+        return self._configuracion
+
+    def guardar(self, config: ConfiguracionNegocio) -> None:
+        self._configuracion = config
+
+
 # --- Vender ---
 
 
@@ -48,7 +60,11 @@ def test_vender_feliz(capsys, monkeypatch) -> None:
     gestor_prod = GestorProductos(repo_prod, repo_tasa)
     inputs = iter(["Harina", "2", "listo", "efectivo_usd", "USD"])
     monkeypatch.setattr("builtins.input", lambda p="": next(inputs))
-    accion_vender(gestor, gestor_prod)
+    accion_vender(
+        gestor,
+        gestor_prod,
+        configuracion=GestorConfiguracion(RepoConfiguracionMemoria()),
+    )
     out = capsys.readouterr().out
     assert "TICKET" in out
     assert repo_prod.obtener(p.id).stock_actual == 8
@@ -60,7 +76,11 @@ def test_vender_carrito_vacio(capsys, monkeypatch) -> None:
     gestor = GestorVentas(inventario, repo_prod, RepoVentasMemoria(), RepoTasaMemoria())
     gestor_prod = GestorProductos(repo_prod, RepoTasaMemoria())
     monkeypatch.setattr("builtins.input", lambda p="": "listo")
-    accion_vender(gestor, gestor_prod)
+    accion_vender(
+        gestor,
+        gestor_prod,
+        configuracion=GestorConfiguracion(RepoConfiguracionMemoria()),
+    )
     assert "Nada que vender" in capsys.readouterr().out
 
 
@@ -75,7 +95,11 @@ def test_anular_venta_feliz(capsys, monkeypatch) -> None:
     gestor_prod = GestorProductos(repo_prod, RepoTasaMemoria())
     inputs_venta = iter(["Harina", "2", "listo", "efectivo_usd", "USD"])
     monkeypatch.setattr("builtins.input", lambda prompt="": next(inputs_venta))
-    accion_vender(gestor, gestor_prod)
+    accion_vender(
+        gestor,
+        gestor_prod,
+        configuracion=GestorConfiguracion(RepoConfiguracionMemoria()),
+    )
     venta = repo_ventas.listar()[0]
     inputs_anul = iter([venta.id[:8], "error de cobro"])
     monkeypatch.setattr("builtins.input", lambda prompt="": next(inputs_anul))

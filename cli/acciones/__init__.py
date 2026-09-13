@@ -1,5 +1,9 @@
 """Acciones de la CLI: una función por opción de menú, sin lógica de negocio."""
 
+from cli.acciones.acciones_configuracion import (
+    accion_editar_configuracion,
+)
+
 from cli.acciones.acciones_clientes import (
     accion_registrar_abono,
     accion_registrar_cliente,
@@ -37,6 +41,7 @@ from cli.acciones.acciones_ventas import (
 )
 
 __all__ = [
+    "accion_editar_configuracion",
     "accion_registrar_abono",
     "accion_registrar_cliente",
     "accion_ver_clientes_deudas",
