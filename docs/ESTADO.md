@@ -8,6 +8,7 @@
 - **Completadas:** Fase 7 — Reportes y cierre de caja (core/reportes.py, docs/modulos/reportes.md).
 - **Completadas:** Fase 8 — Devoluciones y anulaciones (core/devoluciones.py, persistencia, CLI, exclusión en reportes).
 - **Completadas:** Fase 10 — Alertas de stock mínimo y auditoría de movimientos de inventario (`verificar_stock_bajo`, `listar_productos_bajo_minimo`, `historial_movimientos`, alerta en salida CLI, submenú inventario).
+- **Completadas:** Fase 12 — Backup bajo demanda y exportaciones CSV de catálogo, ventas, gastos, cierre de caja, cuentas por cobrar y movimientos de inventario.
 - **Pendiente del MVP:** Ninguno.
 - **Pendientes no críticos (deuda técnica / documentación):**
   - Tests complementarios en `core/`, `utils/` y `config/`.
@@ -32,6 +33,7 @@ _(el agente agrega una línea nueva al final de cada sesión, formato: fecha - q
 - 2026-09-10 - Fase 7: core/reportes.py (GeneradorReportes, CierreCaja, ProductoRanking), tests/core/test_reportes.py (16 tests), integración CLI y main.py. 177/177 tests pasando.
 - 2026-09-10 - Spec docs/modulos/reportes.md. Fase 8: AnulacionVenta, GestorDevoluciones.anular_venta, persistencia, CLI y exclusión en reportes. 187/187 tests pasando.
 - 2026-09-10 - Fase 10: Alertas de stock mínimo, auditoría de movimientos con historial_movimientos, alerta híbrida en salidas CLI, y opción en menú Inventario. 192/192 tests pasando.
+- 2026-09-13 - Fase 12: backup de JSON, seis exportaciones CSV y submenú de ejecución bajo demanda. 212/212 tests pasando.
 
 ## Decisiones pendientes / dudas abiertas
 

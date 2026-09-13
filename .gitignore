@@ -11,6 +11,8 @@ __pycache__/
 # Datos reales del negocio — nunca al repo
 data/*.json
 !data/.gitkeep
+backups/
+exports/
 
 # Editor/IDE
 .vscode/

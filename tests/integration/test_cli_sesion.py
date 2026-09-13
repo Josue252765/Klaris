@@ -31,7 +31,7 @@ def test_cli_sesion_completa(capsys, monkeypatch, tmp_path) -> None:
         "3", "a",
         marcador, "2", "listo", "efectivo_usd", "USD",
         "6", "",
-        "9",
+        "10",
     ]
 
     def fake_input(prompt=""):
@@ -51,3 +51,24 @@ def test_cli_sesion_completa(capsys, monkeypatch, tmp_path) -> None:
     assert "TICKET" in out
     assert "Ganancia neta" in out
     assert "Hasta luego." in out
+
+
+def test_cli_crea_backup_desde_submenu(capsys, monkeypatch, tmp_path) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        Settings,
+        "__init__",
+        lambda self, nombre_negocio="Mi Bodega", moneda_base=None,
+        directorio_datos=None: _init_tmp(
+            self, nombre_negocio, moneda_base, directorio_datos, tmp=tmp_path
+        ),
+    )
+    entradas = iter(["9", "a", "10"])
+    monkeypatch.setattr(builtins, "input", lambda prompt="": next(entradas))
+
+    main_mod.main()
+
+    out = capsys.readouterr().out
+    assert "OK: Backup creado:" in out
+    assert "Hasta luego." in out
+    assert len(list((tmp_path / "backups").glob("backup_*"))) == 1

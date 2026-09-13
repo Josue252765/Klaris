@@ -3,11 +3,19 @@
 from cli.acciones.acciones_configuracion import (
     accion_editar_configuracion,
 )
-
 from cli.acciones.acciones_clientes import (
     accion_registrar_abono,
     accion_registrar_cliente,
     accion_ver_clientes_deudas,
+)
+from cli.acciones.acciones_exportacion import (
+    accion_crear_backup,
+    accion_exportar_catalogo,
+    accion_exportar_cierre,
+    accion_exportar_cuentas,
+    accion_exportar_gastos,
+    accion_exportar_movimientos,
+    accion_exportar_ventas,
 )
 from cli.acciones.acciones_gastos import (
     accion_listar_gastos,
@@ -42,6 +50,13 @@ from cli.acciones.acciones_ventas import (
 
 __all__ = [
     "accion_editar_configuracion",
+    "accion_crear_backup",
+    "accion_exportar_catalogo",
+    "accion_exportar_cierre",
+    "accion_exportar_cuentas",
+    "accion_exportar_gastos",
+    "accion_exportar_movimientos",
+    "accion_exportar_ventas",
     "accion_registrar_abono",
     "accion_registrar_cliente",
     "accion_ver_clientes_deudas",

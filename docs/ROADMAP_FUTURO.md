@@ -41,9 +41,10 @@ Cada módulo se ubicaría dentro de la estructura actual del repo (`core/`, `per
 - **Responsabilidad:** notificar al dueño de condiciones: stock bajo (ya existe `productos_stock_bajo` en inventario), tasa diaria sin actualizar hace >24h, margen negativo en un producto, venta con monto inusual.
 - **Dependencias:** `core/inventario.py`, `core/moneda.py`, `core/precios.py`, `core/ventas.py`.
 
-### Backup y Restauración
+### Backup avanzado y Restauración (v2)
 - **Archivo:** `persistence/backup.py`
-- **Responsabilidad:** exportar todos los `data/*.json` a un archivo comprimido con marca de tiempo, y restaurar desde un backup. Validación de integridad al restaurar.
+- **Base v1/MVP:** backup bajo demanda de los JSON crudos en una carpeta con marca de tiempo, sin compresión ni restauración automática.
+- **Mejora v2:** comprimir los backups, restaurarlos y validar su integridad al restaurar.
 - **Dependencias:** `persistence/json_store.py`, `config/settings.py`.
 
 ### Licencias (protección del software)

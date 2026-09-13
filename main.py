@@ -8,9 +8,16 @@ from cli.acciones import (
     accion_anular_venta,
     accion_buscar_producto,
     accion_cierre_de_caja,
+    accion_crear_backup,
     accion_crear_producto,
     accion_editar_producto,
     accion_entrada_inventario,
+    accion_exportar_catalogo,
+    accion_exportar_cierre,
+    accion_exportar_cuentas,
+    accion_exportar_gastos,
+    accion_exportar_movimientos,
+    accion_exportar_ventas,
     accion_historial_movimientos,
     accion_listar_gastos,
     accion_listar_productos,
@@ -57,7 +64,8 @@ _MENU = """\
 6. Reporte del día
 7. Reportes y cierre de caja
 8. Clientes y Cuentas por Cobrar
-9. Salir
+9. Backup y exportación
+10. Salir
 """
 
 
@@ -118,6 +126,16 @@ def main() -> None:
         elif opcion == "8":
             _menu_clientes(gestor_clientes)
         elif opcion == "9":
+            _menu_backup_exportacion(
+                config.directorio_datos,
+                gestor_productos,
+                gestor_ventas,
+                gestor_gastos,
+                generador_reportes,
+                gestor_clientes,
+                gestor_inventario,
+            )
+        elif opcion == "10":
             print("Hasta luego.")
             break
         else:
@@ -217,6 +235,35 @@ def _menu_clientes(gestor_clientes: GestorClientes) -> None:
         accion_ver_clientes_deudas(gestor_clientes)
     elif sub == "c":
         accion_registrar_abono(gestor_clientes)
+
+
+def _menu_backup_exportacion(
+    directorio_datos: Path,
+    productos: GestorProductos,
+    ventas: GestorVentas,
+    gastos: GestorGastos,
+    reportes: GeneradorReportes,
+    clientes: GestorClientes,
+    inventario: GestorInventario,
+) -> None:
+    """Submenú de backup y exportaciones CSV."""
+    print(
+        "  a) Backup  b) Catálogo  c) Ventas  d) Gastos  "
+        "e) Cierre de caja  f) Cuentas por cobrar  g) Movimientos"
+    )
+    sub = input("  Opción: ").strip().lower()
+    acciones = {
+        "a": lambda: accion_crear_backup(directorio_datos),
+        "b": lambda: accion_exportar_catalogo(productos),
+        "c": lambda: accion_exportar_ventas(ventas),
+        "d": lambda: accion_exportar_gastos(gastos),
+        "e": lambda: accion_exportar_cierre(reportes),
+        "f": lambda: accion_exportar_cuentas(clientes),
+        "g": lambda: accion_exportar_movimientos(inventario, productos),
+    }
+    accion = acciones.get(sub)
+    if accion is not None:
+        accion()
 
 
 if __name__ == "__main__":

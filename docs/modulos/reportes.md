@@ -44,7 +44,7 @@ Si `fecha_hasta` es `None`, el período es un solo día (`fecha_desde`).
 1. Listar ventas del rango (extremos inclusivos) y descartar las anuladas.
 2. Sumar `Venta.total` → `total_ventas_usd`.
 3. Convertir a BS con `tasa_diaria` vigente (`ROUND_HALF_UP`, 2 decimales). Sin tasa o sin `repo_tasa` → `Decimal("0")`.
-4. Acumular desglose por `metodo_pago` (los cuatro métodos, aunque alguno quede en cero).
+4. Acumular desglose por `metodo_pago` (los cinco métodos, incluido `credito`, aunque alguno quede en cero).
 5. `total_gastos_usd` vía `GestorGastos.total_periodo`.
 6. Convertir gastos a BS con la misma regla que ventas.
 7. `balance_neto_usd = total_ventas_usd - total_gastos_usd`.

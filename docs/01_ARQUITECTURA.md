@@ -3,7 +3,7 @@
 ## Reglas inquebrantables
 
 - `core/` = lógica de negocio pura. Cero I/O. Cero imports de `persistence/` en la lógica interna de una clase; los repositorios se inyectan por constructor.
-- `persistence/` = único lugar que toca disco. Nada fuera de `persistence/` abre/lee/escribe archivos.
+- `persistence/` gestiona JSON y backups; `exportacion/` escribe únicamente CSV. Nada fuera de esos límites toca disco.
 - Ningún módulo de `core/` modifica datos de otro módulo directamente — siempre a través de su interfaz pública (métodos), nunca accediendo a atributos internos de otra clase.
 - Ninguna función/método > 30 líneas. Si se excede, dividir.
 - Ningún archivo > 300 líneas. Si se excede, dividir en submódulos.
@@ -35,6 +35,8 @@ klaris/
 │   ├── __init__.py
 │   ├── json_store.py
 │   └── repositorios.py
+├── exportacion/
+│   └── csv_reportes.py
 ├── utils/
 │   ├── __init__.py
 │   ├── validadores.py
